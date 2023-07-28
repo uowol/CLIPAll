@@ -8,25 +8,24 @@ TRAINER=CLIPall
 
 DATASET=$1
 SEED=$2
+SHOTS=$3
+CUDA_VISIBLE_DEVICES=$4
 
-CFG=like_dplclip
-SHOTS=16
+CFG=mom_lr2e-3_B256_ep60
 
 
-DIR=/data4/kchanwo/clipall/maple/output/evaluation/${TRAINER}/${CFG}_${SHOTS}shots/${DATASET}/seed${SEED}
+DIR=/data4/kchanwo/clipall/clipall/output/${DATASET}/${TRAINER}/${CFG}_${SHOTS}shots/seed${SEED}
 if [ -d "$DIR" ]; then
     echo "Results are available in ${DIR}. Skip this job"
 else
     echo "Run this job and save the output to ${DIR}"
 
-    python train.py \
+    CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python train.py \
     --root ${DATA} \
     --seed ${SEED} \
     --trainer ${TRAINER} \
     --dataset-config-file configs/datasets/${DATASET}.yaml \
     --config-file configs/trainers/${TRAINER}/${CFG}.yaml \
     --output-dir ${DIR} \
-    --model-dir /data4/kchanwo/clipall/maple/output/imagenet/${TRAINER}/${CFG}_${SHOTS}shots/seed${SEED} \
-    --load-epoch 40 \
-    --eval-only
+    DATASET.NUM_SHOTS ${SHOTS}
 fi

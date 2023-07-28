@@ -8,21 +8,22 @@ TRAINER=CLIPall
 
 DATASET=$1
 SEED=$2
+CUDA_VISIBLE_DEVICES=$3
 
-CFG=like_dplclip
+CFG=mom_lr2e-3_B256_ep60
 SHOTS=16
-LOADEP=40
+LOADEP=60
 SUB=new
 
 
 COMMON_DIR=${DATASET}/shots_${SHOTS}/${TRAINER}/${CFG}/seed${SEED}
-MODEL_DIR=/data4/kchanwo/clipall/maple/output/base2new/train_base/${COMMON_DIR}
-DIR=/data4/kchanwo/clipall/maple/output/base2new/test_${SUB}/${COMMON_DIR}
+MODEL_DIR=/data4/kchanwo/clipall/clipall/output/base2new/train_base/${COMMON_DIR}
+DIR=/data4/kchanwo/clipall/clipall/output/base2new/test_${SUB}/${COMMON_DIR}
 if [ -d "$DIR" ]; then
     echo "Evaluating model"
     echo "Results are available in ${DIR}. Resuming..."
 
-    python train.py \
+    CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python train.py \
     --root ${DATA} \
     --seed ${SEED} \
     --trainer ${TRAINER} \
@@ -39,7 +40,7 @@ else
     echo "Evaluating model"
     echo "Runing the first phase job and save the output to ${DIR}"
 
-    python train.py \
+    CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python train.py \
     --root ${DATA} \
     --seed ${SEED} \
     --trainer ${TRAINER} \

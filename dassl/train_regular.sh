@@ -1,67 +1,65 @@
 # conda activate maple
-# cd vscode/TaskRes/
+# cd CLIPall/dassl/
 
-# DATASET=$1
-CFG=$1
+SEED=$1
 CUDA_VISIBLE_DEVICES=$2
-SAVE=$3
 
 ###################### 1-Shot ######################
-# bash scripts/taskres/main.sh stanford_cars ${CFG} none 1 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_1shots
-# bash scripts/taskres/main.sh oxford_flowers ${CFG} none 1 1.0 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_1shots
-# bash scripts/taskres/main.sh caltech101 ${CFG} none 1 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_1shots
-# bash scripts/taskres/main.sh dtd ${CFG} none 1 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_1shots
-# bash scripts/taskres/main.sh fgvc_aircraft ${CFG} none 1 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_1shots
-# bash scripts/taskres/main.sh oxford_pets ${CFG} none 1 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_1shots
-# bash scripts/taskres/main.sh food101 ${CFG} none 1 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_1shots
-# bash scripts/taskres/main.sh ucf101 ${CFG} none 1 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_1shots
-# bash scripts/taskres/main.sh eurosat ${CFG} none 1 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_1shots
-# bash scripts/taskres/main.sh sun397 ${CFG} none 1 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_1shots
+bash scripts/clipall/train.sh stanford_cars ${SEED} 1 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh oxford_flowers ${SEED} 1 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh caltech101 ${SEED} 1 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh dtd ${SEED} 1 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh fgvc_aircraft ${SEED} 1 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh oxford_pets ${SEED} 1 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh food101 ${SEED} 1 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh ucf101 ${SEED} 1 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh eurosat ${SEED} 1 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh sun397 ${SEED} 1 ${CUDA_VISIBLE_DEVICES}
 
 ###################### 2-Shot ######################
-# bash scripts/taskres/main.sh stanford_cars ${CFG} none 2 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_2shots
-# bash scripts/taskres/main.sh oxford_flowers ${CFG} none 2 1.0 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_2shots
-# bash scripts/taskres/main.sh caltech101 ${CFG} none 2 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_2shots
-# bash scripts/taskres/main.sh dtd ${CFG} none 2 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_2shots
-# bash scripts/taskres/main.sh fgvc_aircraft ${CFG} none 2 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_2shots
-# bash scripts/taskres/main.sh oxford_pets ${CFG} none 2 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_2shots
-# bash scripts/taskres/main.sh food101 ${CFG} none 2 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_2shots
-# bash scripts/taskres/main.sh ucf101 ${CFG} none 2 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_2shots
-# bash scripts/taskres/main.sh eurosat ${CFG} none 2 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_2shots
-# bash scripts/taskres/main.sh sun397 ${CFG} none 2 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_2shots
+bash scripts/clipall/train.sh stanford_cars ${SEED} 2 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh oxford_flowers ${SEED} 2 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh caltech101 ${SEED} 2 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh dtd ${SEED} 2 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh fgvc_aircraft ${SEED} 2 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh oxford_pets ${SEED} 2 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh food101 ${SEED} 2 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh ucf101 ${SEED} 2 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh eurosat ${SEED} 2 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh sun397 ${SEED} 2 ${CUDA_VISIBLE_DEVICES}
 
 ###################### 4-Shot ######################
-# bash scripts/taskres/main.sh stanford_cars ${CFG} none 4 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_4shots
-# bash scripts/taskres/main.sh oxford_flowers ${CFG} none 4 1.0 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_4shots
-# bash scripts/taskres/main.sh caltech101 ${CFG} none 4 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_4shots
-# bash scripts/taskres/main.sh dtd ${CFG} none 4 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_4shots
-# bash scripts/taskres/main.sh fgvc_aircraft ${CFG} none 4 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_4shots
-# bash scripts/taskres/main.sh oxford_pets ${CFG} none 4 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_4shots
-# bash scripts/taskres/main.sh food101 ${CFG} none 4 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_4shots
-# bash scripts/taskres/main.sh ucf101 ${CFG} none 4 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_4shots
-# bash scripts/taskres/main.sh eurosat ${CFG} none 4 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_4shots
-# bash scripts/taskres/main.sh sun397 ${CFG} none 4 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_4shots
+bash scripts/clipall/train.sh stanford_cars ${SEED} 4 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh oxford_flowers ${SEED} 4 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh caltech101 ${SEED} 4 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh dtd ${SEED} 4 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh fgvc_aircraft ${SEED} 4 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh oxford_pets ${SEED} 4 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh food101 ${SEED} 4 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh ucf101 ${SEED} 4 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh eurosat ${SEED} 4 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh sun397 ${SEED} 4 ${CUDA_VISIBLE_DEVICES}
 
-###################### 8-Shot ######################
-# bash scripts/taskres/main.sh stanford_cars ${METHOD}_lr2e-3_B256_ep200 none 8 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep200B256_8shots
-# bash scripts/taskres/main.sh oxford_flowers ${METHOD}_lr2e-3_B256_ep200 none 8 1.0 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep200B256_8shots
-bash scripts/taskres/main.sh caltech101 ${METHOD}_lr2e-3_B32_ep100 none 8 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B32_8shots
-bash scripts/taskres/main.sh dtd ${METHOD}_lr2e-3_B32_ep100 none 8 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B32_8shots
-bash scripts/taskres/main.sh fgvc_aircraft ${METHOD}_lr2e-3_B32_ep100 none 8 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B32_8shots
-# bash scripts/taskres/main.sh oxford_pets ${METHOD}_lr2e-3_B256_ep200 none 8 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep200B256_8shots
-# bash scripts/taskres/main.sh food101 ${METHOD}_lr2e-3_B256_ep200 none 8 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep200B256_8shots
-# bash scripts/taskres/main.sh ucf101 ${METHOD}_lr2e-3_B256_ep200 none 8 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep200B256_8shots
-bash scripts/taskres/main.sh eurosat ${METHOD}_lr2e-3_B32_ep100 none 8 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B32_8shots
-# bash scripts/taskres/main.sh sun397 ${METHOD}_lr2e-3_B256_ep200 none 8 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep200B256_8shots
+###################### 8-Shot ###################### 여기서부터는 보통 200 epoch를 사용한다.
+bash scripts/clipall/train.sh stanford_cars ${SEED} 8 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh oxford_flowers ${SEED} 8 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh caltech101 ${SEED} 8 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh dtd ${SEED} 8 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh fgvc_aircraft ${SEED} 8 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh oxford_pets ${SEED} 8 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh food101 ${SEED} 8 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh ucf101 ${SEED} 8 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh eurosat ${SEED} 8 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh sun397 ${SEED} 8 ${CUDA_VISIBLE_DEVICES}
 
 ###################### 16-Shot ######################
-# bash scripts/taskres/main.sh stanford_cars ${METHOD}_lr2e-3_B256_ep200 none 16 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep200B256_16shots
-# bash scripts/taskres/main.sh oxford_flowers ${METHOD}_lr2e-3_B256_ep200 none 16 1.0 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B256_16shots
-bash scripts/taskres/main.sh caltech101 ${METHOD}_lr2e-3_B32_ep100 none 16 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B32_16shots
-bash scripts/taskres/main.sh dtd ${METHOD}_lr2e-3_B32_ep100 none 16 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B32_16shots
-bash scripts/taskres/main.sh fgvc_aircraft ${METHOD}_lr2e-3_B32_ep100 none 16 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B32_16shots
-# bash scripts/taskres/main.sh oxford_pets ${METHOD}_lr2e-3_B256_ep200 none 16 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep200B256_16shots
-# bash scripts/taskres/main.sh food101 ${METHOD}_lr2e-3_B256_ep200 none 16 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep200B256_16shots
-# bash scripts/taskres/main.sh ucf101 ${METHOD}_lr2e-3_B256_ep200 none 16 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep200B256_16shots
-bash scripts/taskres/main.sh eurosat ${METHOD}_lr2e-3_B32_ep100 none 16 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep100B32_16shots
-# bash scripts/taskres/main.sh sun397 ${METHOD}_lr2e-3_B256_ep200 none 16 0.5 ${CUDA_VISIBLE_DEVICES} ${SAVE}Ep200B256_16shots
+bash scripts/clipall/train.sh stanford_cars ${SEED} 16 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh oxford_flowers ${SEED} 16 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh caltech101 ${SEED} 16 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh dtd ${SEED} 16 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh fgvc_aircraft ${SEED} 16 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh oxford_pets ${SEED} 16 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh food101 ${SEED} 16 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh ucf101 ${SEED} 16 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh eurosat ${SEED} 16 ${CUDA_VISIBLE_DEVICES}
+bash scripts/clipall/train.sh sun397 ${SEED} 16 ${CUDA_VISIBLE_DEVICES}
