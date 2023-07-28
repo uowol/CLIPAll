@@ -16,16 +16,16 @@ from clip.simple_tokenizer import SimpleTokenizer as _Tokenizer
 from trainers.imagenet_templates import IMAGENET_TEMPLATES, IMAGENET_TEMPLATES_SELECT
 
 CUSTOM_TEMPLATES = {
-    "OxfordPets": "a photo of a {}, a type of pet.",            # 
-    "OxfordFlowers": "a photo of a {}, a type of flower.",      #
-    "FGVCAircraft": "a photo of a {}, a type of aircraft.",     #
-    "DescribableTextures": "{} texture.",                       #
-    "EuroSAT": "a centered satellite photo of {}.",             # 
+    "OxfordPets": "a photo of a {}, a type of pet.", 
+    "OxfordFlowers": "a photo of a {}, a type of flower.",
+    "FGVCAircraft": "a photo of a {}, a type of aircraft.",
+    "DescribableTextures": "{} texture.",
+    "EuroSAT": "a centered satellite photo of {}.", 
     "StanfordCars": "a photo of a {}.",
-    "Food101": "a photo of {}, a type of food.",                #
+    "Food101": "a photo of {}, a type of food.",
     "SUN397": "a photo of a {}.",
     "Caltech101": "a photo of a {}.",
-    "UCF101": "a photo of a person doing {}.",                  #
+    "UCF101": "a photo of a person doing {}.",
     "ImageNet": "a photo of a {}.",
     "ImageNetSketch": "a photo of a {}.",
     "ImageNetV2": "a photo of a {}.",
