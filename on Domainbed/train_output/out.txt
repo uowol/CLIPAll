@@ -1,0 +1,115 @@
+Environment:
+	Python: 3.10.10
+	PyTorch: 2.0.0
+	Torchvision: 0.15.0
+	CUDA: 11.7
+	CUDNN: 8500
+	NumPy: 1.23.5
+	PIL: 9.4.0
+Args:
+	algorithm: ERM
+	checkpoint_freq: None
+	data_dir: /data4/kchanwo/clipall/datasets/
+	dataset: TerraIncognita
+	holdout_fraction: 0.2
+	hparams: {"clip_backbone": "ViT-B/16"}
+	hparams_seed: 0
+	output_dir: train_output
+	save_model_every_checkpoint: False
+	seed: 0
+	skip_model_save: False
+	steps: None
+	task: domain_generalization
+	test_envs: [0]
+	trial_seed: 0
+	uda_holdout_fraction: 0
+	use_caption: False
+HParams:
+	backbone: resnet50
+	batch_size: 32
+	class_balanced: False
+	clip_backbone: ViT-B/16
+	clip_transform: False
+	data_augmentation: True
+	lr: 5e-05
+	nonlinear_classifier: False
+	resnet18: False
+	resnet_dropout: 0.0
+	test_envs: [0]
+	use_caption: False
+	weight_decay: 0.0
+Traceback (most recent call last):
+  File "/home/kchanwo/anaconda/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/kchanwo/anaconda/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/home/kchanwo/vscode/CLIPAll_on_DPLCLIP/domainbed/scripts/train.py", line 189, in <module>
+    algorithm_class = algorithms.get_algorithm_class(args.algorithm)
+  File "/home/kchanwo/vscode/CLIPAll_on_DPLCLIP/domainbed/algorithms.py", line 29, in get_algorithm_class
+    raise NotImplementedError("Algorithm not found: {}".format(algorithm_name))
+NotImplementedError: Algorithm not found: ERM
+Exception ignored in atexit callback: <function _exit_function at 0x7fb43719ac20>
+Traceback (most recent call last):
+  File "/home/kchanwo/anaconda/lib/python3.10/multiprocessing/util.py", line 357, in _exit_function
+    p.join()
+  File "/home/kchanwo/anaconda/lib/python3.10/multiprocessing/process.py", line 149, in join
+    res = self._popen.wait(timeout)
+  File "/home/kchanwo/anaconda/lib/python3.10/multiprocessing/popen_fork.py", line 43, in wait
+    return self.poll(os.WNOHANG if timeout == 0.0 else 0)
+  File "/home/kchanwo/anaconda/lib/python3.10/multiprocessing/popen_fork.py", line 27, in poll
+    pid, sts = os.waitpid(self.pid, flag)
+  File "/home/kchanwo/anaconda/lib/python3.10/site-packages/torch/utils/data/_utils/signal_handling.py", line 66, in handler
+    _error_if_any_worker_fails()
+RuntimeError: DataLoader worker (pid 1767624) is killed by signal: Terminated. 
+Environment:
+	Python: 3.10.10
+	PyTorch: 2.0.0
+	Torchvision: 0.15.0
+	CUDA: 11.7
+	CUDNN: 8500
+	NumPy: 1.23.5
+	PIL: 9.4.0
+Args:
+	algorithm: ERM
+	checkpoint_freq: None
+	data_dir: None
+	dataset: RotatedMNIST
+	holdout_fraction: 0.2
+	hparams: None
+	hparams_seed: 0
+	output_dir: train_output
+	save_model_every_checkpoint: False
+	seed: 0
+	skip_model_save: False
+	steps: None
+	task: domain_generalization
+	test_envs: [0]
+	trial_seed: 0
+	uda_holdout_fraction: 0
+	use_caption: False
+HParams:
+	backbone: resnet50
+	batch_size: 64
+	class_balanced: False
+	clip_transform: False
+	data_augmentation: True
+	lr: 0.001
+	momentum: 0.1
+	nonlinear_classifier: False
+	resnet18: False
+	resnet_dropout: 0.0
+	test_envs: [0]
+	use_caption: False
+	weight_decay: 0.0
+Traceback (most recent call last):
+  File "/home/kchanwo/anaconda/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/kchanwo/anaconda/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/home/kchanwo/vscode/CLIPAll_on_DPLCLIP/domainbed/scripts/train.py", line 116, in <module>
+    dataset = vars(datasets)[args.dataset](args.data_dir, args.test_envs, hparams)
+  File "/home/kchanwo/vscode/CLIPAll_on_DPLCLIP/domainbed/datasets.py", line 166, in __init__
+    super(RotatedMNIST, self).__init__(root, [0, 15, 30, 45, 60, 75],
+  File "/home/kchanwo/vscode/CLIPAll_on_DPLCLIP/domainbed/datasets.py", line 95, in __init__
+    raise ValueError('Data directory not specified!')
+ValueError: Data directory not specified!
