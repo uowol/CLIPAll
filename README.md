@@ -1,43 +1,33 @@
-# Task Residual: Tuning Vision-Language Models in One Line of Code
-The official implementation of [*Task Residual for Tuning Vision-Language Models*](https://arxiv.org/abs/2211.10277) (accepted to CVPR 2023).
-
-The proposed Task Residual Tuning (TaskRes) is a new paradigm for tuning vision-language models (VLMs), which directly tunes the text-based classifier weights, without the need of heavy text encoders for prompt updates or carefully designed adapters.
-
-## Comparison
-- Prompt tuning tunes the input of the models;
-- Adapters transform the pre-trained features by an MLP $\phi_{\omega}$: $\mathbf{f}'=\mathbf{f} + \alpha \phi_{\omega}(\mathbf{f})$ or $\mathbf{t}'=\mathbf{t} + \alpha \phi_{\omega}(\mathbf{t})$;
-- TaskRes (Ours) directly tunes the text-based classifier weights in an *additive* way: $\mathbf{t}'=\mathbf{t}+\alpha\mathbf{x}$ where $\mathbf{x}$ is a set of learnable parameters.
-
-![image](./images/taskres.png)
-
-## Installation
-This repository requires to install the environment and datasets:
-- follow [here](https://github.com/KaiyangZhou/Dassl.pytorch#installation) to install [Dassl.pytorch](https://github.com/KaiyangZhou/Dassl.pytorch) and PyTorch.
-- run `pip install -r requirements.txt` under `TaskRes/` to install a few more packages required by [CLIP](https://github.com/openai/CLIP) (this should be done when `dassl` is activated).
-- follow [DATASETS.md](DATASETS.md) to install the datasets.
-
-*PS: You can also follow [CoOp](https://github.com/KaiyangZhou/CoOp) to perform the installation.*
-
-## Usage
-We present the basic usage here.
-
-(a) Train regular TaskRes:
-- see [train_regular.sh](train_regular.sh) to run regular TaskRes (i.e., using regular base).
-
-(b) Train enhanced TaskRes:
-- download [enhanced bases](https://drive.google.com/drive/folders/1_ehtvBRWbbcYZRTAcvtCyUTD_tL4GUiV?usp=share_link) and move the folder `strong_base` to `TaskRes/`.
-- see [train_enhance.sh](train_enhance.sh) to run enhanced TaskRes (i.e., using enhanced base).
-
-(c) Test domain generalization:
-- see [test_dg.sh](test_dg.sh) to run enhanced TaskRes (i.e., using enhanced base).
-
-*PS: Refer to [CoOp](https://github.com/KaiyangZhou/CoOp) for more usage.*
-
-## Acknowledgment
-This repository is mainly based on Kaiyang Zhou's repository [CoOp](https://github.com/KaiyangZhou/CoOp) code base. We sincerely thank Kaiyang for his awesome code base.
-
 ## Citation
-If you find this work useful for your research, please cite us:
+### Domain Prompt Learning for Efficiently Adapting CLIP to Unseen Domains
+```
+@article{zhang2021domain,
+  title={Domain Prompt Learning for Efficiently Adapting CLIP to Unseen Domains},
+  author={Zhang, Xin and Gu, Shixiang Shane and Matsuo, Yutaka and Iwasawa, Yusuke},
+  journal={arXiv e-prints},
+  pages={arXiv--2111},
+  year={2021}
+}
+```
+### Tip-Adapter: Training-free Adaption of CLIP for Few-shot Classification
+```
+@article{zhang2021tip,
+  title={Tip-Adapter: Training-free CLIP-Adapter for Better Vision-Language Modeling},
+  author={Zhang, Renrui and Fang, Rongyao and Gao, Peng and Zhang, Wei and Li, Kunchang and Dai, Jifeng and Qiao, Yu and Li, Hongsheng},
+  journal={arXiv preprint arXiv:2111.03930},
+  year={2021}
+}
+```
+### MaPLe: Multi-modal Prompt Learning [CVPR 2023]
+```
+@inproceedings{khattakMaPLe,
+    title={MaPLe: Multi-modal Prompt Learning},
+    author={khattak, Muhammad Uzair and Rasheed, Hanoona and Maaz, Muhammad and Khan, Salman and Khan, Fahad Shahbaz},
+    booktitle={The IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+    year={2023}
+}
+```
+### Task Residual: Tuning Vision-Language Models in One Line of Code
 ```
 @inproceedings{yu2023task,
   title={Task Residual for Tuning Vision-Language Models},
