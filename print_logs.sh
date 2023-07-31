@@ -1,14 +1,17 @@
-DIR="/data4/kchanwo/clipall/maple/output/"
-DATASET=$1
-TRAINER=$2
-CFG=$3
-NUM_SHOTS=$4
-TYPE=$5 # fewshot, base2novel, crossdataset
+DIR="/data4/kchanwo/clipall/clipall/output/"
+TRAINER=$1
+CFG=$2
+# NUM_SHOTS=$4
+TYPE=$3 # fewshot, base2novel, crossdataset
+DATASET=$4
 
-python print_logs.py \
---dir ${DIR} \
---dataset ${DATASET} \
---trainer ${TRAINER} \
---cfg ${CFG} \
---num_shots ${NUM_SHOTS} \
---type ${TYPE}
+for NUM_SHOTS in 1 2 4 8 16
+do
+    python print_logs.py \
+    --dir ${DIR} \
+    --dataset ${DATASET} \
+    --trainer ${TRAINER} \
+    --cfg ${CFG} \
+    --num_shots ${NUM_SHOTS} \
+    --type ${TYPE}
+done

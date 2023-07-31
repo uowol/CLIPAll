@@ -1,6 +1,6 @@
 ###################### 1-Shot ######################
 conda activate maple
-cd vscode/TaskRes/
+cd CLIPAll/dassl/
 bash scripts/taskres/main.sh oxford_flowers mom_lr1e-3_B32_ep100 none 1 1.0 2
 bash scripts/taskres/main.sh caltech101 mom_lr1e-3_B32_ep100 none 1 0.5 2
 bash scripts/taskres/main.sh dtd mom_lr1e-3_B32_ep100 none 1 0.5 2
@@ -14,7 +14,7 @@ bash scripts/taskres/main.sh imagenet mom_lr1e-3_B32_ep100 none 1 0.5 2
 
 ###################### 2-Shot ######################
 conda activate maple
-cd vscode/TaskRes/
+cd CLIPAll/dassl/
 bash scripts/taskres/main.sh oxford_flowers mom_lr1e-3_B32_ep100 none 2 1.0 1
 bash scripts/taskres/main.sh caltech101 mom_lr1e-3_B32_ep100 none 2 0.5 1
 bash scripts/taskres/main.sh dtd mom_lr1e-3_B32_ep100 none 2 0.5 1
@@ -28,7 +28,7 @@ bash scripts/taskres/main.sh imagenet mom_lr1e-3_B32_ep100 none 2 0.5 1
 
 ###################### 4-Shot ######################
 conda activate maple
-cd vscode/TaskRes/
+cd CLIPAll/dassl/
 bash scripts/taskres/main.sh oxford_flowers mom_lr1e-3_B32_ep100 none 4 1.0 4
 bash scripts/taskres/main.sh caltech101 mom_lr1e-3_B32_ep100 none 4 0.5 4
 bash scripts/taskres/main.sh dtd mom_lr1e-3_B32_ep100 none 4 0.5 4
@@ -42,7 +42,7 @@ bash scripts/taskres/main.sh imagenet mom_lr1e-3_B32_ep100 none 4 0.5 4
 
 ###################### 8-Shot ######################
 conda activate maple
-cd vscode/TaskRes/
+cd CLIPAll/dassl/
 bash scripts/taskres/main.sh oxford_flowers mom_lr1e-3_B256_ep60 none 8 1.0 3
 bash scripts/taskres/main.sh caltech101 mom_lr1e-3_B32_ep120 none 8 0.5 3
 bash scripts/taskres/main.sh dtd mom_lr1e-3_B32_ep120 none 8 0.5 3
@@ -56,8 +56,8 @@ bash scripts/taskres/main.sh imagenet mom_lr1e-3_B32_ep120 none 8 0.5 3
 
 ###################### 16-Shot ######################
 conda activate maple
-cd vscode/TaskRes/
-bash scripts/taskres/main.sh caltech101 like_dplclip none 16 0.5 0 img1,txt12
+cd CLIPAll/dassl/
+bash scripts/taskres/main.sh caltech101 mom_lr2e-3_B256_ep40 16 0 img1,txt12
 bash scripts/taskres/main.sh caltech101 like_dplclip none 16 0.5 0
 bash scripts/taskres/main.sh oxford_flowers like_dplclip none 16 1.0 0
 bash scripts/taskres/main.sh dtd like_dplclip none 16 0.5 0
@@ -116,4 +116,14 @@ bash scripts/taskres/eval.sh ucf101 deprecated/mom_lr1e-3_B256_ep60 3 ResEp60B25
 bash scripts/taskres/eval.sh eurosat deprecated/mom_lr1e-3_B256_ep60 3 ResEp60B256
 bash scripts/taskres/eval.sh food101 deprecated/mom_lr1e-3_B256_ep60 3 ResEp60B256
 bash scripts/taskres/eval.sh sun397 deprecated/mom_lr1e-3_B256_ep60 3 ResEp60B256
+
+bash scripts/clipall/train_cp.sh imagenet 1 16 2 256 40
+bash scripts/clipall/train_cp.sh imagenet 1 16 2 256 60
+
+bash scripts/clipall/train_cp.sh imagenet 1 16 3 32 40
+bash scripts/clipall/train_cp.sh imagenet 1 16 3 32 60
+
+bash scripts/clipall/train_cp.sh imagenet 1 16 0 256 100
+bash scripts/clipall/train_cp.sh imagenet 1 16 0 32 100
+
 

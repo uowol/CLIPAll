@@ -305,8 +305,8 @@ class CustomCLIP(nn.Module):
             self.tokens, 
             self.clip_model, 
             self.text_encoder, 
-            custom_text_weight, 
-            # mean_text_weight, 
+            # custom_text_weight, 
+            mean_text_weight, 
             self.device)
 
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)    # [batch_size, self.EMBEDDING_DIM]

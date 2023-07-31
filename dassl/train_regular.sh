@@ -1,5 +1,5 @@
 # conda activate maple
-# cd CLIPall/dassl/
+# cd CLIPAll/dassl/
 
 SEED=$1
 CUDA_VISIBLE_DEVICES=$2

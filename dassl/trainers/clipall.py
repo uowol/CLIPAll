@@ -53,8 +53,30 @@ def load_clip_to_cpu(cfg):
     return model
 
 
+class MLP(nn.Module):
+    """Just  an MLP"""
+    def __init__(self, n_inputs, n_outputs):
+        super(MLP, self).__init__()
+        self.input = nn.Linear(n_inputs, 512)
+        self.dropout = nn.Dropout(0.1)
+        self.hiddens = nn.ModuleList([nn.Linear(512,512)])
+        self.output = nn.Linear(512, n_outputs)
+        self.n_outputs = n_outputs
+
+    def forward(self, x):
+        x = self.input(x)
+        x = self.dropout(x)
+        x = F.relu(x)
+        for hidden in self.hiddens:
+            x = hidden(x)
+            x = self.dropout(x)
+            x = F.relu(x)
+        x = self.output(x)
+        return x
+    
+    
 class TextEncoder(nn.Module):
-    def __init__(self, clip_model, width, layers, heads, output_dim):
+    def __init__(self, clip_model, width, output_dim):
         super().__init__()    
         scale = width ** -0.5
         self.transformer = clip_model.transformer
@@ -62,15 +84,23 @@ class TextEncoder(nn.Module):
         self.ln_final = clip_model.ln_final
         self.dtype = clip_model.dtype
 
-        self.layer_positional_embedding = nn.Parameter(scale * torch.randn(self.transformer.layers, width))
-        self.ln_layer1 = LayerNorm(width)
-        self.ln_layer2 = LayerNorm(width)
-        self.layer_transformer = Transformer(
-            width=width,
-            layers=layers,
-            heads=heads
-        )
-        self.text_projection = nn.Parameter(clip_model.text_projection)
+        self.text_projection = clip_model.text_projection.cuda()
+        self.textual_projection = nn.Parameter( # [12, 512, 512]
+            torch.stack([
+                scale * torch.randn((width, output_dim), dtype=self.dtype).cuda()
+                for _ in range(self.transformer.layers - 1)
+            ]+[self.text_projection])).requires_grad_(True)
+
+        self.frozen_text_projection = clip_model.text_projection.clone().detach().cuda().type(torch.float32)
+        self.mlp = MLP(width, self.transformer.layers)
+        # self.ln = LayerNorm(width)
+
+        def init_weights(m):
+            if isinstance(m, nn.Linear):
+                torch.nn.init.xavier_uniform(m.weight)
+                m.bias.data.fill_(0.01)
+        
+        self.mlp.apply(init_weights)
         
     def forward(self, prompt):
         out_list = []
@@ -84,25 +114,29 @@ class TextEncoder(nn.Module):
         text_features = self.ln_final(text_features).type(self.dtype)
         return text_features
     
-    def proj(self, text_features, tokenized_prompts):
-        text_features = text_features[:,
-                            torch.arange(text_features.shape[1]),       # [batch_size]
-                            tokenized_prompts.argmax(-1)                # [batch_size, 77] -> [batch_size]
-                        ]   # n_layer, batch_size, d_model
-        x = text_features.permute(1, 0, 2)  # batch_size, n_layer, d_model
-        x = x + self.layer_positional_embedding.type(self.dtype)
-        x = x.permute(1, 0, 2)  # n_layer+1, batch_size, d_model
-        x = self.layer_transformer(self.ln_layer1(x))
-        x = x.permute(1, 0, 2)  # batch_size, n_layer+1, d_model
-        x = self.ln_layer2(x[:, -1, :]).type(self.dtype)
-        
-        x = x @ self.text_projection.type(self.dtype)
+    def proj(self, text_features, weights):
+        x = text_features.permute(1, 0, 2)  # n_prompt, n_layer, d_model
+        # x = self.ln(x).type(self.dtype)
+
+        x = torch.einsum('abc,bcd->abd', x.type(self.dtype), 
+                         self.textual_projection.type(self.dtype))  # (8, 12, 768), (12, 768, 512) -> (8, 12, 512)
+        x = torch.einsum('bc,acd->abd', 
+                         weights.type(self.dtype), x)               # (1, 12), (8, 12, 512)    -> (8, 1, 512)
+        x = x.squeeze(1)    # (32, 512)
         
         return x
     
+    def generate_weights(self, text_feature, image_weights):    # 12, n_prompt, 512
+        # text_feature = text_feature @ self.frozen_text_projection
+        # image_feature = self.ln(image_feature)
+        # w = self.mlp(text_feature) + image_weights.expand(text_feature.shape[0],-1)  # batch_size, 12
+        w = self.mlp(text_feature.type(torch.float32)).mean(dim=1).mean(dim=0, keepdim=True) + image_weights  # 1, 12
+        # w = image_weights  # batch_size, 12
+        # w = self.softmax(w)
+        return w
 
 class ImageEncoder(nn.Module):
-    def __init__(self, clip_model, width, layers, heads, output_dim):
+    def __init__(self, clip_model, width, output_dim):
         super().__init__()
         scale = width ** -0.5
         self.conv1 = clip_model.visual.conv1
@@ -113,15 +147,27 @@ class ImageEncoder(nn.Module):
         self.ln_post = clip_model.visual.ln_post
         self.dtype = clip_model.dtype
         
-        self.layer_positional_embedding = nn.Parameter(scale * torch.randn(self.transformer.layers, width))
-        self.ln_layer1 = LayerNorm(width)
-        self.ln_layer2 = LayerNorm(width)
-        self.layer_transformer = Transformer(
-            width=width,
-            layers=layers,
-            heads=heads
-        )
-        self.image_projection = nn.Parameter(clip_model.visual.proj)
+        self.image_projection = clip_model.visual.proj.cuda()
+        self.visual_projection = nn.Parameter(  # [12, 768, 512]
+            torch.stack([
+                scale * torch.randn((width, output_dim), dtype=self.dtype).cuda()
+                for _ in range(self.transformer.layers - 1)
+            ]+[self.image_projection])).requires_grad_(True)
+
+        self.frozen_image_projection = clip_model.visual.proj.clone().detach().cuda().type(torch.float32)
+        self.mlp1 = MLP(width, self.transformer.layers)
+        self.mlp2 = MLP(width, self.transformer.layers)
+        # self.ln = LayerNorm(width)
+
+        self.softmax = nn.Softmax()
+        
+        def init_weights(m):
+            if isinstance(m, nn.Linear):
+                torch.nn.init.xavier_uniform(m.weight)
+                m.bias.data.fill_(0.01)
+
+        self.mlp1.apply(init_weights)
+        self.mlp2.apply(init_weights)
 
     def forward(self, image):
         out_list = []
@@ -146,36 +192,38 @@ class ImageEncoder(nn.Module):
         
         return image_features
     
-    def proj(self, image_features):
+    def proj(self, image_features, weights):
         x = image_features.permute(1, 0, 2) # batch_size, n_layer, d_model
-        x = x + self.layer_positional_embedding.type(self.dtype)
-        x = x.permute(1, 0, 2)  # n_layer+1, batch_size, d_model
-        x = self.layer_transformer(self.ln_layer1(x))
-        x = x.permute(1, 0, 2)  # batch_size, n_layer+1, d_model
-        x = self.ln_layer2(x[:, -1, :]).type(self.dtype)
-        
-        x = x @ self.image_projection.type(self.dtype)
+        # x = self.ln(x).type(self.dtype)
+        x = torch.einsum('abc,bcd->abd', x.type(self.dtype), 
+                         self.visual_projection.type(self.dtype))   # (32, 12, 768), (12, 768, 512) -> (32, 12, 512)
+        x = torch.einsum('bc,acd->abd', 
+                         weights.type(self.dtype), x)               # (1, 12), (32, 12, 512)    -> (32, 1, 512)
+        x = x.squeeze(1)    # (32, 512)
 
         return x
+    
+    def generate_weights(self, image_feature):
+        # image_feature = image_feature @ self.frozen_image_projection
+        # image_feature = self.ln(image_feature)
+        w1 = self.mlp1(image_feature).mean(dim=0, keepdim=True)     # 1, 12
+        w2 = self.mlp2(image_feature).mean(dim=0, keepdim=True)     # 1, 12   
+        # w = self.softmax(w)
+        return w1, w2
 
 
-def _proj_base_text_features(base_text_features, tokens, clip_model, text_encoder, device):    
+def _proj_text_features(text_features, text_encoder, image_weights, device):
     text_embeddings = []
-    for tokens_, base_text_features_ in zip(tokens, base_text_features):
-        if clip_model.dtype == torch.float16:
-            # _, text_embedding = text_encoder.proj(
-            text_embedding = text_encoder.proj(
-                base_text_features_.type(clip_model.dtype), tokens_.cuda())
-            text_embeddings.append(text_embedding)  # not support float16 on cpu
-        else:
-            # _, text_embedding = text_encoder.proj(
-            text_embedding = text_encoder.proj(
-                base_text_features_.type(clip_model.dtype), tokens_.cuda())
-            text_embeddings.append(text_embedding)
+    # n_class, 12, n_prompt, 512
+    textual_weights = text_encoder.generate_weights(text_features[:,-1,:,:], image_weights)
+    for text_features_ in text_features:    # class 개수만큼 반복
+        # 12, n_prompt, 512
+        text_embedding = text_encoder.proj(text_features_, textual_weights) 
+        text_embeddings.append(text_embedding)
     text_embeddings = torch.stack(text_embeddings).mean(1)
     text_encoder = text_encoder.to(device)
     return text_embeddings.to(device)
-    
+
 
 class CustomCLIP(nn.Module):
     def __init__(self, cfg, classnames, clip_model):
@@ -202,30 +250,32 @@ class CustomCLIP(nn.Module):
         
         text_width = 512
         image_width = 768
-        layers = 2
-        heads = 8
         output_dim = 512
         
-        text_encoder = TextEncoder(clip_model, text_width, layers, heads, output_dim)
+        text_encoder = TextEncoder(clip_model, text_width, output_dim)
         if self.dtype == torch.float16:
             text_encoder = text_encoder.cuda()
 
-        image_encoder = ImageEncoder(clip_model, image_width, layers, heads, output_dim)
+        image_encoder = ImageEncoder(clip_model, image_width, output_dim)
         if self.dtype == torch.float16:
             image_encoder = image_encoder.cuda()
 
         self.text_encoder = text_encoder
         self.image_encoder = image_encoder
         
-        self.tokens = []
-        self.base_text_features = []
+        self.text_features = []
         with torch.no_grad():
             for text in classnames:
                 tokens = clip.tokenize([template.format(text) for template in TEMPLATES])  # tokenized prompts are indices
                 embeddings = clip_model.token_embedding(tokens).type(self.dtype)
-                self.base_text_features.append(text_encoder(embeddings.cuda())) # [12-layers, 512-emb]
-                self.tokens.append(tokens)
-        
+                text_features = text_encoder(embeddings.cuda()) # 12, n_prompt, 77, 512
+                text_features = text_features[:,
+                    torch.arange(text_features.shape[1]),       # [batch_size]
+                    tokens.argmax(-1)                           # [batch_size, 77] -> [batch_size]
+                ]   # n_layer, n_prompt, d_model
+                self.text_features.append(text_features)        # [12-layers, n_prompt, 512-emb]
+        self.text_features = torch.stack(self.text_features).type(torch.float32)   # n_class, 12, n_prompt, 512
+
         # embedding dim for image and text encoder.
         self.EMBEDDING_DIM = 512
         
@@ -240,25 +290,25 @@ class CustomCLIP(nn.Module):
         self.clip_model = clip_model
 
     def forward(self, image):
-        with torch.no_grad():
-            clip_image_feature = self.clip_model.encode_image(image)    # CLIP에서 사전학습된 좋은 image의 properties를 추출한다.
-
         try:
             x = self.image_encoder(image)
-            image_features = self.image_encoder.proj(x)
+            visual_weights, textual_weights = self.image_encoder.generate_weights(x[-1])
+            image_features = self.image_encoder.proj(x, visual_weights)
         except:
             x = self.image_encoder(image.float())
-            image_features = self.image_encoder.proj(x)
+            visual_weights, textual_weights = self.image_encoder.generate_weights(x[-1])
+            image_features = self.image_encoder.proj(x, visual_weights)
 
-        text_features = _proj_base_text_features(
-            self.base_text_features, 
-            self.tokens, 
-            self.clip_model, 
-            self.text_encoder, 
-            self.device)
+        # text_features = self.text_encoder.proj(self.text_features, textual_weights)
+        text_features = _proj_text_features(
+            self.text_features, 
+            self.text_encoder,
+            textual_weights, 
+            self.device
+        )
 
-        image_features = image_features / image_features.norm(dim=-1, keepdim=True)    # [batch_size, self.EMBEDDING_DIM]
-        text_features = text_features / text_features.norm(dim=-1, keepdim=True)       # [batch_size, self.EMBEDDING_DIM]
+        image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+        text_features = text_features / text_features.norm(dim=-1, keepdim=True)
 
         logit_scale = self.logit_scale.exp()
         logits = logit_scale * image_features @ text_features.t()

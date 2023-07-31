@@ -10,12 +10,14 @@ DATASET=$1
 SEED=$2
 SHOTS=$3
 CUDA_VISIBLE_DEVICES=$4
+BATCH=$5
+EP=$6
+# SAVE=$7
+CFG=mom_lr2e-3_B${BATCH}_ep${EP}
 
-CFG=mom_lr2e-3_B32_ep100
-LOADEP=100
 
-
-DIR=/data4/kchanwo/clipall/clipall/output/evaluation/${TRAINER}/${CFG}_${SHOTS}shots/${DATASET}/seed${SEED}
+DIR=/data4/kchanwo/clipall/clipall/output/${DATASET}/${TRAINER}/${CFG}_${SHOTS}shots/seed${SEED}
+# DIR=/data4/kchanwo/clipall/clipall/output/${DATASET}/${TRAINER}/${SAVE}/seed${SEED}
 if [ -d "$DIR" ]; then
     echo "Results are available in ${DIR}. Skip this job"
 else
@@ -28,7 +30,5 @@ else
     --dataset-config-file configs/datasets/${DATASET}.yaml \
     --config-file configs/trainers/${TRAINER}/${CFG}.yaml \
     --output-dir ${DIR} \
-    --model-dir /data4/kchanwo/clipall/maple/output/imagenet/${TRAINER}/${CFG}_${SHOTS}shots/seed${SEED} \
-    --load-epoch ${LOADEP} \
-    --eval-only
+    DATASET.NUM_SHOTS ${SHOTS}
 fi
