@@ -10,9 +10,11 @@ DATASET=$1
 SEED=$2
 SHOTS=$3
 CUDA_VISIBLE_DEVICES=$4
+BATCH=$5
+EP=$6
 
-CFG=mom_lr2e-3_B32_ep100
-LOADEP=100
+CFG=mom_lr2e-3_B${BATCH}_ep${EP}
+LOADEP=${EP}
 
 
 DIR=/data4/kchanwo/clipall/clipall/output/evaluation/${TRAINER}/${CFG}_${SHOTS}shots/${DATASET}/seed${SEED}
@@ -28,7 +30,7 @@ else
     --dataset-config-file configs/datasets/${DATASET}.yaml \
     --config-file configs/trainers/${TRAINER}/${CFG}.yaml \
     --output-dir ${DIR} \
-    --model-dir /data4/kchanwo/clipall/maple/output/imagenet/${TRAINER}/${CFG}_${SHOTS}shots/seed${SEED} \
+    --model-dir /data4/kchanwo/clipall/clipall/output/imagenet/${TRAINER}/${CFG}_${SHOTS}shots/seed${SEED} \
     --load-epoch ${LOADEP} \
     --eval-only
 fi

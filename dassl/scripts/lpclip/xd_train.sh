@@ -11,10 +11,11 @@ SEED=$2
 
 CFG=vit_b16  # rn50, rn101, vit_b32 or vit_b16
 SHOTS=$3
+CUDA_VISIBLE_DEVICES=$4
 
-DIR=/data4/kchanwo/clipall/maple/output/${DATASET}/${TRAINER}/${CFG}_${SHOTS}shots/seed${SEED}
+DIR=/data4/kchanwo/clipall/clipall/output/${DATASET}/${TRAINER}/${CFG}_${SHOTS}shots/seed${SEED}
 
-python train.py \
+CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python train.py \
 --root ${DATA} \
 --seed ${SEED} \
 --trainer ${TRAINER} \

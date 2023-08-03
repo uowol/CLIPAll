@@ -8,15 +8,16 @@ TRAINER=LinearProbingCLIP
 
 DATASET=$1
 SEED=$2
+CUDA_VISIBLE_DEVICES=$3
 
 CFG=vit_b16
 SHOTS=16
 
 
-DIR=/data4/kchanwo/clipall/maple/output/base2new/train_base/${DATASET}/shots_${SHOTS}/${TRAINER}/${CFG}/seed${SEED}
+DIR=/data4/kchanwo/clipall/clipall/output/base2new/train_base/${DATASET}/shots_${SHOTS}/${TRAINER}/${CFG}/seed${SEED}
 if [ -d "$DIR" ]; then
     echo "Results are available in ${DIR}. Resuming..."
-    python train.py \
+    CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python train.py \
     --root ${DATA} \
     --seed ${SEED} \
     --trainer ${TRAINER} \
@@ -27,7 +28,7 @@ if [ -d "$DIR" ]; then
     DATASET.SUBSAMPLE_CLASSES base
 else
     echo "Run this job and save the output to ${DIR}"
-    python train.py \
+    CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python train.py \
     --root ${DATA} \
     --seed ${SEED} \
     --trainer ${TRAINER} \

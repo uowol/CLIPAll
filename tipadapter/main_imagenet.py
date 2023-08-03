@@ -17,6 +17,7 @@ def get_arguments():
     
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', dest='config', help='settings of Tip-Adapter in yaml format')
+    parser.add_argument('--shots', type=int, default=16, help='# of shots')
     args = parser.parse_args()
 
     return args
@@ -134,7 +135,7 @@ def main():
     torch.manual_seed(1)
     
     print("Preparing ImageNet dataset.")
-    imagenet = ImageNet(cfg['root_path'], cfg['shots'], preprocess)
+    imagenet = ImageNet(cfg['root_path'], args.shots, preprocess)
 
     test_loader = torch.utils.data.DataLoader(imagenet.test, batch_size=64, num_workers=8, shuffle=False)
 

@@ -26,6 +26,10 @@ import datasets.imagenet_r
 import trainers.taskres
 import trainers.clipall
 import trainers.zsclip
+import trainers.coop
+import trainers.cocoop
+import trainers.maple
+import trainers.clip_adapter
 
 
 def print_args(args, cfg):
@@ -87,6 +91,19 @@ def extend_cfg(cfg):
         cfg.TRAINER.MY_MODEL.PARAM_C = False
     """
     from yacs.config import CfgNode as CN
+
+    cfg.TRAINER.COOP = CN()
+    cfg.TRAINER.COOP.N_CTX = 16  # number of context vectors
+    cfg.TRAINER.COOP.CSC = False  # class-specific context
+    cfg.TRAINER.COOP.CTX_INIT = ""  # initialization words
+    cfg.TRAINER.COOP.PREC = "fp16"  # fp16, fp32, amp
+    cfg.TRAINER.COOP.CLASS_TOKEN_POSITION = "end"  # 'middle' or 'end' or 'front'
+
+    cfg.TRAINER.COCOOP = CN()
+    cfg.TRAINER.COCOOP.N_CTX = 16  # number of context vectors
+    cfg.TRAINER.COCOOP.CTX_INIT = ""  # initialization words
+    cfg.TRAINER.COCOOP.PREC = "fp16"  # fp16, fp32, amp
+    # cfg.DATASET.SUBSAMPLE_CLASSES = "all"  # all, base or new
     
     cfg.TRAINER.CLIPALL = CN()
     cfg.TRAINER.CLIPALL.N_CTX = 16  # number of context vectors
@@ -103,11 +120,6 @@ def extend_cfg(cfg):
     cfg.TRAINER.TaskRes.CLASS_TOKEN_POSITION = "end"  # 'middle' or 'end' or 'front'
     cfg.TRAINER.TaskRes.RESIDUAL_SCALE = 1.0
     cfg.TRAINER.TaskRes.ENHANCED_BASE = args.enhanced_base
-
-    cfg.TRAINER.COCOOP = CN()
-    cfg.TRAINER.COCOOP.N_CTX = 16  # number of context vectors
-    cfg.TRAINER.COCOOP.CTX_INIT = ""  # initialization words
-    cfg.TRAINER.COCOOP.PREC = "fp16"  # fp16, fp32, amp
 
     cfg.DATASET.SUBSAMPLE_CLASSES = "all"  # all, base or new
 

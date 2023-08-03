@@ -53,6 +53,30 @@ def load_clip_to_cpu(cfg):
     return model
 
 
+# class MLP(nn.Module):
+#     """Just  an MLP"""
+#     def __init__(self, n_inputs, n_outputs, hparams):
+#         super(MLP, self).__init__()
+#         self.input = nn.Linear(n_inputs, hparams['mlp_width'])
+#         self.dropout = nn.Dropout(hparams['mlp_dropout'])
+#         self.hiddens = nn.ModuleList([
+#             nn.Linear(hparams['mlp_width'],hparams['mlp_width'])
+#             for _ in range(hparams['mlp_depth']-2)])
+#         self.output = nn.Linear(hparams['mlp_width'], n_outputs)
+#         self.n_outputs = n_outputs
+
+#     def forward(self, x):
+#         x = self.input(x)
+#         x = self.dropout(x)
+#         x = F.relu(x)
+#         for hidden in self.hiddens:
+#             x = hidden(x)
+#             x = self.dropout(x)
+#             x = F.relu(x)
+#         x = self.output(x)
+#         return x
+
+
 class MLP(nn.Module):
     """Just  an MLP"""
     def __init__(self, n_inputs, n_outputs):
@@ -90,17 +114,6 @@ class TextEncoder(nn.Module):
                 scale * torch.randn((width, output_dim), dtype=self.dtype).cuda()
                 for _ in range(self.transformer.layers - 1)
             ]+[self.text_projection])).requires_grad_(True)
-
-        self.frozen_text_projection = clip_model.text_projection.clone().detach().cuda().type(torch.float32)
-        self.mlp = MLP(width, self.transformer.layers)
-        # self.ln = LayerNorm(width)
-
-        def init_weights(m):
-            if isinstance(m, nn.Linear):
-                torch.nn.init.xavier_uniform(m.weight)
-                m.bias.data.fill_(0.01)
-        
-        self.mlp.apply(init_weights)
         
     def forward(self, prompt):
         out_list = []
@@ -117,7 +130,6 @@ class TextEncoder(nn.Module):
     def proj(self, text_features, weights):
         x = text_features.permute(1, 0, 2)  # n_prompt, n_layer, d_model
         # x = self.ln(x).type(self.dtype)
-
         x = torch.einsum('abc,bcd->abd', x.type(self.dtype), 
                          self.textual_projection.type(self.dtype))  # (8, 12, 768), (12, 768, 512) -> (8, 12, 512)
         x = torch.einsum('bc,acd->abd', 
@@ -125,15 +137,6 @@ class TextEncoder(nn.Module):
         x = x.squeeze(1)    # (32, 512)
         
         return x
-    
-    def generate_weights(self, text_feature, image_weights):    # 12, n_prompt, 512
-        # text_feature = text_feature @ self.frozen_text_projection
-        # image_feature = self.ln(image_feature)
-        # w = self.mlp(text_feature) + image_weights.expand(text_feature.shape[0],-1)  # batch_size, 12
-        w = self.mlp(text_feature.type(torch.float32)).mean(dim=1).mean(dim=0, keepdim=True) + image_weights  # 1, 12
-        # w = image_weights  # batch_size, 12
-        # w = self.softmax(w)
-        return w
 
 class ImageEncoder(nn.Module):
     def __init__(self, clip_model, width, output_dim):
@@ -204,21 +207,18 @@ class ImageEncoder(nn.Module):
         return x
     
     def generate_weights(self, image_feature):
-        # image_feature = image_feature @ self.frozen_image_projection
-        # image_feature = self.ln(image_feature)
         w1 = self.mlp1(image_feature).mean(dim=0, keepdim=True)     # 1, 12
         w2 = self.mlp2(image_feature).mean(dim=0, keepdim=True)     # 1, 12   
         # w = self.softmax(w)
         return w1, w2
 
 
-def _proj_text_features(text_features, text_encoder, image_weights, device):
+def _proj_text_features(text_features, text_encoder, textual_weights, device):
     text_embeddings = []
     # n_class, 12, n_prompt, 512
-    textual_weights = text_encoder.generate_weights(text_features[:,-1,:,:], image_weights)
     for text_features_ in text_features:    # class 개수만큼 반복
         # 12, n_prompt, 512
-        text_embedding = text_encoder.proj(text_features_, textual_weights) 
+        text_embedding = text_encoder.proj(text_features_, textual_weights)
         text_embeddings.append(text_embedding)
     text_embeddings = torch.stack(text_embeddings).mean(1)
     text_encoder = text_encoder.to(device)

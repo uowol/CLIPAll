@@ -9,8 +9,10 @@ TRAINER=CLIPall
 DATASET=$1
 SEED=$2
 CUDA_VISIBLE_DEVICES=$3
+BATCH=$4
+EP=$5
 
-CFG=mom_lr2e-3_B32_ep100
+CFG=mom_lr2e-3_B${BATCH}_ep${EP}
 SHOTS=16
 
 DIR=/data4/kchanwo/clipall/clipall/output/base2new/train_base/${DATASET}/shots_${SHOTS}/${TRAINER}/${CFG}/seed${SEED}

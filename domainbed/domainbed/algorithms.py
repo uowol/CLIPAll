@@ -203,16 +203,6 @@ class CLIPALL(CLIP):
                 textual_scale * torch.randn((textual_width, output_dim), dtype=self.dtype).to(self.device)
                 for _ in range(self.num_of_textual_encoder_layers - 1)
             ]+[self.clip_model.text_projection])).requires_grad_(True)
-        # self.visual_projection = nn.Parameter(  # [12, 768, 512]
-        #     torch.stack([
-        #         visual_scale * torch.randn((visual_width, output_dim), dtype=self.dtype).to(self.device)
-        #         for _ in range(self.num_of_visual_encoder_layers)
-        #     ])).requires_grad_(True)
-        # self.textual_projection = nn.Parameter( # [12, 512, 512]
-        #     torch.stack([
-        #         textual_scale * torch.randn((textual_width, output_dim), dtype=self.dtype).to(self.device)
-        #         for _ in range(self.num_of_textual_encoder_layers)
-        #     ])).requires_grad_(True)
         
         self.visual_network = networks.MLP(self.EMBEDDING_DIM, 12, hparams).to(device=self.device, dtype=self.clip_model.dtype)
         self.textual_network = networks.MLP(self.EMBEDDING_DIM, 12, hparams).to(device=self.device, dtype=self.clip_model.dtype)
@@ -314,12 +304,12 @@ class CLIPALL(CLIP):
         # NOTE: DPLCLIP
         # [12, 7, 512]
         text_feature = self.encode_text(self.prompt)
-        # 3 * [ 7, 512]
+        # [ 7, 512]
         # TODO: 여기 'da,abc->bc'가 아니라 'da,abc->dbc'로 하고 squeeze(0)을 해주어야 할까??
         text_feature = torch.einsum('da,abc->bc', mean_text_weight, text_feature)
         
         # NOTE: CLIPALL
-        # 3 * [64, 512]
+        # [64, 512]
         # TODO: 여기 'da,abc->bc'가 아니라 'da,abc->dbc'로 하고 squeeze(0)을 해주어야 할까??
         image_feature = torch.einsum('da,abc->bc', mean_image_weight, self.encode_image(x))
 

@@ -19,6 +19,7 @@ def get_arguments():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', dest='config', help='settings of Tip-Adapter in yaml format')
+    parser.add_argument('--shots', type=int, default=16, help='# of shots')
     args = parser.parse_args()
 
     return args
@@ -165,7 +166,7 @@ def main():
     torch.manual_seed(1)
     
     print("Preparing dataset.")
-    dataset = build_dataset(cfg['dataset'], cfg['root_path'], cfg['shots'])
+    dataset = build_dataset(cfg['dataset'], cfg['root_path'], args.shots)
 
     val_loader = build_data_loader(data_source=dataset.val, batch_size=64, is_train=False, tfm=preprocess, shuffle=False)
     test_loader = build_data_loader(data_source=dataset.test, batch_size=64, is_train=False, tfm=preprocess, shuffle=False)

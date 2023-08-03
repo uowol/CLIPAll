@@ -8,18 +8,19 @@ TRAINER=MaPLe
 
 DATASET=$1
 SEED=$2
+CUDA_VISIBLE_DEVICES=$3
 
 CFG=vit_b16_c2_ep5_batch4_2ctx_cross_datasets
 SHOTS=16
 
 
-DIR=/data4/kchanwo/clipall/maple/output/${DATASET}/${TRAINER}/${CFG}_${SHOTS}shots/seed${SEED}
+DIR=/data4/kchanwo/clipall/clipall/output/${DATASET}/${TRAINER}/${CFG}_${SHOTS}shots/seed${SEED}
 if [ -d "$DIR" ]; then
     echo "Results are available in ${DIR}."
 else
     echo "Run this job and save the output to ${DIR}"
 
-    python train.py \
+    CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python train.py \
     --root ${DATA} \
     --seed ${SEED} \
     --trainer ${TRAINER} \

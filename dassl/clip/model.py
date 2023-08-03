@@ -447,7 +447,7 @@ def convert_weights(model: nn.Module):
     model.apply(_convert_weights_to_fp16)
 
 
-def build_model(state_dict: dict):
+def build_model(state_dict: dict, design_details=None):
     vit = "visual.proj" in state_dict
 
     if vit:

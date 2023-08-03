@@ -3,26 +3,29 @@
 #cd ../..
 
 # custom config
-DATA="/path/to/dataset/folder"
+DATA="/data4/kchanwo/clipall/datasets/"
 TRAINER=CoCoOp
 
 DATASET=$1
 SEED=$2
+CUDA_VISIBLE_DEVICES=$3
+BATCH=$4
+EP=$5
 
-CFG=vit_b16_c4_ep10_batch1_ctxv1
+CFG=mom_lr2e-3_B${BATCH}_ep${EP}
 SHOTS=16
-LOADEP=10
+LOADEP=${EP}
 SUB=new
 
 
 COMMON_DIR=${DATASET}/shots_${SHOTS}/${TRAINER}/${CFG}/seed${SEED}
-MODEL_DIR=output/base2new/train_base/${COMMON_DIR}
-DIR=output/base2new/test_${SUB}/${COMMON_DIR}
+MODEL_DIR=/data4/kchanwo/clipall/clipall/output/base2new/train_base/${COMMON_DIR}
+DIR=/data4/kchanwo/clipall/clipall/output/base2new/test_${SUB}/${COMMON_DIR}
 if [ -d "$DIR" ]; then
     echo "Evaluating model"
     echo "Results are available in ${DIR}. Resuming..."
 
-    python train.py \
+    CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python train.py \
     --root ${DATA} \
     --seed ${SEED} \
     --trainer ${TRAINER} \
@@ -39,7 +42,7 @@ else
     echo "Evaluating model"
     echo "Runing the first phase job and save the output to ${DIR}"
 
-    python train.py \
+    CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python train.py \
     --root ${DATA} \
     --seed ${SEED} \
     --trainer ${TRAINER} \

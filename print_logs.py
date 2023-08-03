@@ -16,6 +16,24 @@ def main(args):
                         with open(path+seed+'/'+file_name, 'r') as f:
                             last_line = f.readlines()[-7:]
                         print("".join(last_line), end='')
+        elif 'CoOp' == args.trainer:
+            path += args.cfg+f"_{args.num_shots}shots" + '/'
+            for seed in os.listdir(path+'nctx16_cscFalse_ctpend/'):
+                print("="*20+" "+path[len(args.dir):]+str(seed)+" "+"="*20)
+                for file_name in os.listdir(path+'nctx16_cscFalse_ctpend/'+seed):
+                    if 'log' in file_name:             
+                        print(f">>> print '{file_name}'\n")   
+                        with open(path+'nctx16_cscFalse_ctpend/'+seed+'/'+file_name, 'r') as f:
+                            last_line = f.readlines()[-8:]
+                        print("".join(last_line), end='')
+            for seed in os.listdir(path+'nctx16_cscTrue_ctpend/'):
+                print("="*20+" "+path[len(args.dir):]+str(seed)+" "+"="*20)
+                for file_name in os.listdir(path+'nctx16_cscTrue_ctpend/'+seed):
+                    if 'log' in file_name:             
+                        print(f">>> print '{file_name}'\n")   
+                        with open(path+'nctx16_cscTrue_ctpend/'+seed+'/'+file_name, 'r') as f:
+                            last_line = f.readlines()[-8:]
+                        print("".join(last_line), end='')
         else:
             path += args.cfg+f"_{args.num_shots}shots" + '/'
             for seed in os.listdir(path):

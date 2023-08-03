@@ -18,8 +18,8 @@ SUB_novel=new
 
 COMMON_DIR=${DATASET}/shots_${SHOTS}/${TRAINER}/${CFG}/seed${SEED}
 MODEL_DIR=${WEIGHTSPATH}/base/seed${SEED}
-DIR_base=/data4/kchanwo/clipall/maple/output/base2new/test_${SUB_base}/${COMMON_DIR}
-DIR_novel=/data4/kchanwo/clipall/maple/output/base2new/test_${SUB_novel}/${COMMON_DIR}
+DIR_base=/data4/kchanwo/clipall/clipall/output/base2new/test_${SUB_base}/${COMMON_DIR}
+DIR_novel=/data4/kchanwo/clipall/clipall/output/base2new/test_${SUB_novel}/${COMMON_DIR}
 if [ -d "$DIR" ]; then
     echo "Results are already available in ${DIR}. Skipping..."
 else
