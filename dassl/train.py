@@ -26,6 +26,7 @@ import datasets.imagenet_r
 import trainers.taskres
 import trainers.clipall
 import trainers.zsclip
+import trainers.lpclip
 import trainers.coop
 import trainers.cocoop
 import trainers.maple
@@ -120,6 +121,13 @@ def extend_cfg(cfg):
     cfg.TRAINER.TaskRes.CLASS_TOKEN_POSITION = "end"  # 'middle' or 'end' or 'front'
     cfg.TRAINER.TaskRes.RESIDUAL_SCALE = 1.0
     cfg.TRAINER.TaskRes.ENHANCED_BASE = args.enhanced_base
+
+    # Config for MaPLe
+    cfg.TRAINER.MAPLE = CN()
+    cfg.TRAINER.MAPLE.N_CTX = 2  # number of context vectors
+    cfg.TRAINER.MAPLE.CTX_INIT = "a photo of a"  # initialization words
+    cfg.TRAINER.MAPLE.PREC = "fp16"  # fp16, fp32, amp
+    cfg.TRAINER.MAPLE.PROMPT_DEPTH = 9 # Max 12, minimum 0, for 1 it will act as shallow MaPLe (J=1)
 
     cfg.DATASET.SUBSAMPLE_CLASSES = "all"  # all, base or new
 

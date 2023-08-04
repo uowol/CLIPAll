@@ -34,20 +34,40 @@ CUSTOM_TEMPLATES = {
 }
 
 
+# def load_clip_to_cpu(cfg):
+#     backbone_name = cfg.MODEL.BACKBONE.NAME
+#     url = clip._MODELS[backbone_name]
+#     model_path = clip._download(url)
+    
+#     try:
+#         # loading JIT archive
+#         model = torch.jit.load(model_path, map_location='cpu').eval()
+#         state_dict = None
+    
+#     except RuntimeError:
+#         state_dict = torch.load(model_path, map_location='cpu')
+    
+#     model = clip.build_model(state_dict or model.state_dict())
+
+#     return model
+
 def load_clip_to_cpu(cfg):
     backbone_name = cfg.MODEL.BACKBONE.NAME
     url = clip._MODELS[backbone_name]
     model_path = clip._download(url)
-    
+
     try:
         # loading JIT archive
-        model = torch.jit.load(model_path, map_location='cpu').eval()
+        model = torch.jit.load(model_path, map_location="cpu").eval()
         state_dict = None
-    
+
     except RuntimeError:
-        state_dict = torch.load(model_path, map_location='cpu')
-    
-    model = clip.build_model(state_dict or model.state_dict())
+        state_dict = torch.load(model_path, map_location="cpu")
+    design_details = {"trainer": 'CLIP_Adapter',
+                      "vision_depth": 0,
+                      "language_depth": 0, "vision_ctx": 0,
+                      "language_ctx": 0}
+    model = clip.build_model(state_dict or model.state_dict(), design_details)
 
     return model
 
@@ -94,7 +114,7 @@ class CustomCLIP(nn.Module):
         self.text_encoder = TextEncoder(cfg, classnames, clip_model)
         self.logit_scale = clip_model.logit_scale
         self.dtype = clip_model.dtype
-        self.adapter = Adapter(1024, 4).to(clip_model.dtype)
+        self.adapter = Adapter(512, 4).to(clip_model.dtype)
 
             
     def forward(self, image):

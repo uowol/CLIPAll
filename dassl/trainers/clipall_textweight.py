@@ -47,10 +47,31 @@ def load_clip_to_cpu(cfg):
 
     except RuntimeError:
         state_dict = torch.load(model_path, map_location="cpu")
-
-    model = clip.build_model(state_dict or model.state_dict())
+    design_details = {"trainer": 'CLIPall',
+                      "vision_depth": 0,
+                      "language_depth": 0, "vision_ctx": 0,
+                      "language_ctx": 0}
+    model = clip.build_model(state_dict or model.state_dict(), design_details)
 
     return model
+
+
+# def load_clip_to_cpu(cfg):
+#     backbone_name = cfg.MODEL.BACKBONE.NAME
+#     url = clip._MODELS[backbone_name]
+#     model_path = clip._download(url)
+
+#     try:
+#         # loading JIT archive
+#         model = torch.jit.load(model_path, map_location="cpu").eval()
+#         state_dict = None
+
+#     except RuntimeError:
+#         state_dict = torch.load(model_path, map_location="cpu")
+
+#     model = clip.build_model(state_dict or model.state_dict())
+
+#     return model
 
 
 class MLP(nn.Module):

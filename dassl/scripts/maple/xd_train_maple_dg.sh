@@ -10,7 +10,7 @@ DATASET=$1
 SEED=$2
 CUDA_VISIBLE_DEVICES=$3
 
-CFG=vit_b16_c2_ep5_batch4_2ctx
+CFG=vit_b16_c2_ep5_batch4_2ctx_cross_datasets
 SHOTS=16
 
 

@@ -16,4 +16,5 @@ bash ~/CLIPAll/dassl/scripts/${TRAINER}/xd_train_maple.sh ucf101 ${SEED} ${CUDA_
 bash ~/CLIPAll/dassl/scripts/${TRAINER}/xd_train_maple.sh eurosat ${SEED} ${CUDA_VISIBLE_DEVICES}
 bash ~/CLIPAll/dassl/scripts/${TRAINER}/xd_train_maple.sh sun397 ${SEED} ${CUDA_VISIBLE_DEVICES}
 
-bash ~/CLIPAll/dassl/scripts/${TRAINER}/xd_train_maple.sh imagenet ${SEED} ${CUDA_VISIBLE_DEVICES}
+bash ~/CLIPAll/dassl/scripts/${TRAINER}/xd_train_maple_dg.sh imagenet ${SEED} ${CUDA_VISIBLE_DEVICES}
+
