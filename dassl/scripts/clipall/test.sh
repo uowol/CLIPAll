@@ -4,7 +4,7 @@
 
 # custom config
 DATA="/data4/kchanwo/clipall/datasets/"
-TRAINER=CLIPall
+TRAINER=CLIPALL
 
 DATASET=$1
 SEED=$2

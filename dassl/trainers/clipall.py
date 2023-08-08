@@ -56,31 +56,6 @@ def load_clip_to_cpu(cfg):
     return model
 
 
-
-# class MLP(nn.Module):
-#     """Just  an MLP"""
-#     def __init__(self, n_inputs, n_outputs, hparams):
-#         super(MLP, self).__init__()
-#         self.input = nn.Linear(n_inputs, hparams['mlp_width'])
-#         self.dropout = nn.Dropout(hparams['mlp_dropout'])
-#         self.hiddens = nn.ModuleList([
-#             nn.Linear(hparams['mlp_width'],hparams['mlp_width'])
-#             for _ in range(hparams['mlp_depth']-2)])
-#         self.output = nn.Linear(hparams['mlp_width'], n_outputs)
-#         self.n_outputs = n_outputs
-
-#     def forward(self, x):
-#         x = self.input(x)
-#         x = self.dropout(x)
-#         x = F.relu(x)
-#         for hidden in self.hiddens:
-#             x = hidden(x)
-#             x = self.dropout(x)
-#             x = F.relu(x)
-#         x = self.output(x)
-#         return x
-
-
 class MLP(nn.Module):
     """Just  an MLP"""
     def __init__(self, n_inputs, n_outputs):
@@ -162,8 +137,8 @@ class ImageEncoder(nn.Module):
             ]+[self.image_projection])).requires_grad_(True)
 
         self.frozen_image_projection = clip_model.visual.proj.clone().detach().cuda().type(torch.float32)
-        self.mlp1 = MLP(width, self.transformer.layers)
-        self.mlp2 = MLP(width, self.transformer.layers)
+        self.mlp1 = MLP(output_dim, self.transformer.layers)
+        self.mlp2 = MLP(output_dim, self.transformer.layers)
         # self.ln = LayerNorm(width)
 
         self.softmax = nn.Softmax()
@@ -211,6 +186,7 @@ class ImageEncoder(nn.Module):
         return x
     
     def generate_weights(self, image_feature):
+        image_feature = image_feature @ self.frozen_image_projection.type(torch.float32)
         w1 = self.mlp1(image_feature).mean(dim=0, keepdim=True)     # 1, 12
         w2 = self.mlp2(image_feature).mean(dim=0, keepdim=True)     # 1, 12   
         # w = self.softmax(w)
@@ -321,7 +297,7 @@ class CustomCLIP(nn.Module):
 
 
 @TRAINER_REGISTRY.register()
-class CLIPall(TrainerX):
+class CLIPALL(TrainerX):
     """CLIPall"""
 
     def check_cfg(self, cfg):

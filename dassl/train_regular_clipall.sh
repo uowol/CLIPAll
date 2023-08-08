@@ -65,4 +65,4 @@ bash ~/CLIPAll/dassl/scripts/${TRAINER}/train.sh ucf101 ${SEED} 16 ${CUDA_VISIBL
 bash ~/CLIPAll/dassl/scripts/${TRAINER}/train.sh eurosat ${SEED} 16 ${CUDA_VISIBLE_DEVICES}
 bash ~/CLIPAll/dassl/scripts/${TRAINER}/train.sh sun397 ${SEED} 16 ${CUDA_VISIBLE_DEVICES}
 
-bash ~/CLIPAll/dassl/scripts/${TRAINER}/train.sh imagenet ${SEED} 16 ${CUDA_VISIBLE_DEVICES}
+bash ~/CLIPAll/dassl/scripts/${TRAINER}/train_cp.sh imagenet ${SEED} 16 ${CUDA_VISIBLE_DEVICES} 256 40

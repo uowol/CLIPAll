@@ -160,6 +160,8 @@ def main():
     # CLIP
     clip_model, preprocess = clip.load(cfg['backbone'])
     clip_model.eval()
+    
+    cfg['load_cache'] = True
 
     # Prepare dataset
     random.seed(1)

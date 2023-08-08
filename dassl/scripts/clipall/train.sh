@@ -4,14 +4,14 @@
 
 # custom config
 DATA="/data4/kchanwo/clipall/datasets/"
-TRAINER=CLIPall
+TRAINER=CLIPALL
 
 DATASET=$1
 SEED=$2
 SHOTS=$3
 CUDA_VISIBLE_DEVICES=$4
 
-CFG=mom_lr35e-3_B4_ep100
+CFG=mom_lr2e-3_B32_ep100
 
 
 DIR=/data4/kchanwo/clipall/clipall/output/${DATASET}/${TRAINER}/${CFG}_${SHOTS}shots/seed${SEED}

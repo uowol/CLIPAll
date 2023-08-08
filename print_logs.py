@@ -16,7 +16,7 @@ def main(args):
                         with open(path+seed+'/'+file_name, 'r') as f:
                             last_line = f.readlines()[-7:]
                         print("".join(last_line), end='')
-        elif 'CoOp' == args.trainer:
+        elif 'CoOp' == args.trainer or 'CoOpALL' == args.trainer:
             path += args.cfg+f"_{args.num_shots}shots" + '/'
             for seed in os.listdir(path+'nctx16_cscFalse_ctpend/'):
                 print("="*20+" "+path[len(args.dir):]+str(seed)+" "+"="*20)
@@ -79,6 +79,8 @@ def main(args):
         path += args.trainer + '/'
         if 'ZeroshotCLIP' in args.trainer:
             path += args.cfg + '/'
+        elif 'CoOp' == args.trainer or 'CoOpALL' == args.trainer:            
+            path += args.cfg + f'_{args.num_shots}shots/nctx16_cscFalse_ctpend/'
         else:
             path += args.cfg+f"_{args.num_shots}shots" + '/'
         path += args.dataset + '/'

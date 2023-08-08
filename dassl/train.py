@@ -32,6 +32,11 @@ import trainers.cocoop
 import trainers.maple
 import trainers.clip_adapter
 
+import trainers.coopall
+import trainers.cocoopall
+import trainers.clip_adapterall
+import trainers.mapleall
+
 
 def print_args(args, cfg):
     print("***************")
@@ -78,6 +83,11 @@ def reset_cfg(cfg, args):
     if args.head:
         cfg.MODEL.HEAD.NAME = args.head
 
+    if args.model_dir:
+        cfg.MODEL_DIR = args.model_dir
+
+    if args.load_epoch:
+        cfg.LOAD_EPOCH = args.load_epoch
 
 
 def extend_cfg(cfg):

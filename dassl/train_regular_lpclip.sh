@@ -67,4 +67,4 @@ bash ~/CLIPAll/dassl/scripts/${TRAINER}/xd_train.sh sun397 ${SEED} 16 ${CUDA_VIS
 
 bash ~/CLIPAll/dassl/scripts/${TRAINER}/xd_train.sh imagenet ${SEED} 16 ${CUDA_VISIBLE_DEVICES}
 
-bash ~/CLIPAll/dassl/scripts/lpclip/xd_train.sh stanford_cars 1 16 0
+# bash ~/CLIPAll/dassl/scripts/lpclip/xd_train.sh stanford_cars 1 16 0
