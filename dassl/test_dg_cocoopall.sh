@@ -3,7 +3,7 @@ CUDA_VISIBLE_DEVICES=$2
 TRAINER=cocoopall
 
 ###################### 16-Shot ######################
-bash ~/CLIPAll/dassl/scripts/${TRAINER}/test.sh imagenetv2 ${SEED} 16 ${CUDA_VISIBLE_DEVICES}
+# bash ~/CLIPAll/dassl/scripts/${TRAINER}/test.sh imagenetv2 ${SEED} 16 ${CUDA_VISIBLE_DEVICES}
 bash ~/CLIPAll/dassl/scripts/${TRAINER}/test.sh imagenet_sketch ${SEED} 16 ${CUDA_VISIBLE_DEVICES}
 bash ~/CLIPAll/dassl/scripts/${TRAINER}/test.sh imagenet_a ${SEED} 16 ${CUDA_VISIBLE_DEVICES}
 bash ~/CLIPAll/dassl/scripts/${TRAINER}/test.sh imagenet_r ${SEED} 16 ${CUDA_VISIBLE_DEVICES}

@@ -321,23 +321,26 @@ class CoCoOpALL(TrainerX):
         self.register_model("weighted_projection", self.model, self.optim, self.sched)
 
         self.scaler = GradScaler() if cfg.TRAINER.CLIPALL.PREC == "amp" else None
+        
+        # gradient accumulation
+        self.model_zero_grad()
+        self.iter_batch = 0
+
 
     def forward_backward(self, batch):
+        # gradient accumulation
+        self.iter_batch += 1
+        
         image, label = self.parse_batch_train(batch)
         
         prec = self.cfg.TRAINER.CLIPALL.PREC
-        if prec == "amp":
-            with autocast():
-                output = self.model(image)
-                loss = F.cross_entropy(output, label)
-            self.optim.zero_grad()
-            self.scaler.scale(loss).backward()
-            self.scaler.step(self.optim)
-            self.scaler.update()
-        else:
-            output = self.model(image)
-            loss = F.cross_entropy(output, label)
-            self.model_backward_and_update(loss)
+        output = self.model(image)
+        loss = F.cross_entropy(output, label)
+        self.model_backward(loss)
+        if self.iter_batch % 2 == 0:
+            self.model_update()
+            self.model_zero_grad()
+        # self.model_backward_and_update(loss)    # NOTE gradient accumulation, gradien만 저장하여 원하는 batch에 평균 구해서 학습, 이 부분 수정해보기
 
         loss_summary = {
             "loss": loss.item(),
