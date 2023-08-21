@@ -1,9 +1,10 @@
 DIR="/data4/kchanwo/clipall/clipall/output/"
-TRAINER=$1
-CFG=$2
-# NUM_SHOTS=$4
-TYPE=$3 # fewshot, base2novel, crossdataset
-# DATASET=$4
+TYPE=$1 # fewshot, base2novel, crossdataset
+TRAINER=$2
+BATCH=$3
+EP=$4
+CFG=mom_lr2e-3_B${BATCH}_ep${EP}
+
 
 for DATASET in imagenet caltech101 oxford_pets stanford_cars oxford_flowers food101 fgvc_aircraft sun397 dtd eurosat ucf101
 do

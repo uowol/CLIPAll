@@ -9,10 +9,12 @@ TRAINER=LinearProbingCLIP
 DATASET=$1
 SEED=$2
 CUDA_VISIBLE_DEVICES=$3
+BATCH=$4
+EP=$5
 
-CFG=vit_b16
+CFG=mom_lr2e-3_B${BATCH}_ep${EP}
 SHOTS=16
-LOADEP=200
+LOADEP=${EP}
 SUB=new
 
 
@@ -28,7 +30,7 @@ if [ -d "$DIR" ]; then
     --seed ${SEED} \
     --trainer ${TRAINER} \
     --dataset-config-file configs/datasets/${DATASET}.yaml \
-    --config-file configs/trainers/CoOp/${CFG}.yaml \
+    --config-file configs/trainers/LFA/${CFG}.yaml \
     --output-dir ${DIR} \
     --model-dir ${MODEL_DIR} \
     --load-epoch ${LOADEP} \
@@ -45,7 +47,7 @@ else
     --seed ${SEED} \
     --trainer ${TRAINER} \
     --dataset-config-file configs/datasets/${DATASET}.yaml \
-    --config-file configs/trainers/CoOp/${CFG}.yaml \
+    --config-file configs/trainers/LFA/${CFG}.yaml \
     --output-dir ${DIR} \
     --model-dir ${MODEL_DIR} \
     --load-epoch ${LOADEP} \

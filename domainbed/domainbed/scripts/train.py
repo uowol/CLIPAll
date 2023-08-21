@@ -33,6 +33,7 @@ if __name__ == "__main__":
     parser.add_argument('--data_dir', type=str)
     parser.add_argument('--dataset', type=str, default="RotatedMNIST")
     parser.add_argument('--algorithm', type=str, default="ERM")
+    parser.add_argument('--dplclip_path', type=str)
     parser.add_argument('--task', type=str, default="domain_generalization",
         help='domain_generalization | domain_adaptation')
     parser.add_argument('--hparams', type=str,
@@ -96,7 +97,9 @@ if __name__ == "__main__":
     hparams['clip_transform'] = hparams['backbone'] == 'clip'
 
     hparams['use_caption'] = args.use_caption
-
+    
+    hparams['dplclip_path'] = args.dplclip_path
+    
     print('HParams:')
     for k, v in sorted(hparams.items()):
         print('\t{}: {}'.format(k, v))

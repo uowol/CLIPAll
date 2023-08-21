@@ -23,19 +23,14 @@ import datasets.imagenetv2
 import datasets.imagenet_a
 import datasets.imagenet_r
 
-import trainers.taskres
-import trainers.clipall
-import trainers.zsclip
+# import trainers.taskres
+import trainers.lfa
+# import trainers.zsclip
 import trainers.lpclip
 import trainers.coop
-import trainers.cocoop
+# import trainers.cocoop
 import trainers.maple
 import trainers.clip_adapter
-
-import trainers.coopall
-import trainers.cocoopall
-import trainers.clip_adapterall
-import trainers.mapleall
 
 
 def print_args(args, cfg):
@@ -116,12 +111,9 @@ def extend_cfg(cfg):
     cfg.TRAINER.COCOOP.PREC = "fp16"  # fp16, fp32, amp
     # cfg.DATASET.SUBSAMPLE_CLASSES = "all"  # all, base or new
     
-    cfg.TRAINER.CLIPALL = CN()
-    cfg.TRAINER.CLIPALL.N_CTX = 16  # number of context vectors
-    cfg.TRAINER.CLIPALL.CTX_INIT = "a photo of a"  # initialization words
-    cfg.TRAINER.CLIPALL.PREC = "fp16"  # fp16, fp32, amp
-    cfg.TRAINER.CLIPALL.RESIDUAL_SCALE = 1.0
-    cfg.TRAINER.CLIPALL.ENHANCED_BASE = args.enhanced_base
+    cfg.TRAINER.LFA = CN()
+    cfg.TRAINER.LFA.CTX_INIT = "a photo of a"  # initialization words
+    cfg.TRAINER.LFA.PREC = "fp16"  # fp16, fp32, amp
 
     cfg.TRAINER.TaskRes = CN()
     cfg.TRAINER.TaskRes.N_CTX = 16  # number of context vectors

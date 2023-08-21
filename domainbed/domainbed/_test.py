@@ -216,6 +216,12 @@ if __name__ == "__main__":
             plt.close()
 
     if args.algorithm in ['CLIPALL']:
+        plt.rc('font', size=14)
+        plt.rc('axes', labelsize=14)   # x,y축 label 폰트 크기
+        plt.rc('xtick', labelsize=14)  # x축 눈금 폰트 크기 
+        plt.rc('ytick', labelsize=14)  # y축 눈금 폰트 크기
+        plt.rc('legend', fontsize=14)  # 범례 폰트 크기
+        plt.rc('figure', titlesize=20) # figure title 폰트 크기
         clip_model = clip.load(hparams['clip_backbone'])[0].float()
         with torch.no_grad():
             for i, x in enumerate(images):
@@ -227,8 +233,8 @@ if __name__ == "__main__":
                 text_weight = algorithm.textual_network(image_feature)
                 mean_text_weight = text_weight.mean(dim=0, keepdim=True)
 
-                wi = mean_image_weight.cpu().numpy().squeeze(0)
-                wt = mean_text_weight.cpu().numpy().squeeze(0)
+                wi = np.abs(mean_image_weight.cpu().numpy().squeeze(0))
+                wt = np.abs(mean_text_weight.cpu().numpy().squeeze(0))
                 plt.figure(figsize=(10, 5))
                 plt.bar(range(12), wi)
                 plt.savefig(f'{args.output_dir}/test/domain={domain[i][0]},image.png')

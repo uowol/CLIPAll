@@ -26,7 +26,7 @@ def clip_classifier(classnames, template, clip_model):
             texts = clip.tokenize(texts).cuda()
             # prompt ensemble for ImageNet
             class_embeddings = clip_model.encode_text(texts)
-            class_embeddings /= class_embeddings.norm(dim=-1, keepdim=True)
+            class_embeddings = class_embeddings / class_embeddings.norm(dim=-1, keepdim=True)
             class_embedding = class_embeddings.mean(dim=0)
             class_embedding /= class_embedding.norm()
             clip_weights.append(class_embedding)
@@ -49,7 +49,8 @@ def build_cache_model(cfg, clip_model, train_loader_cache):
                 print('Augment Epoch: {:} / {:}'.format(augment_idx, cfg['augment_epoch']))
                 for i, (images, target) in enumerate(tqdm(train_loader_cache)):
                     images = images.cuda()
-                    image_features = clip_model.encode_image(images)
+                    # image_features = clip_model.encode_image(images)
+                    image_features, _ = clip_model.encode_image(images)
                     train_features.append(image_features)
                     if augment_idx == 0:
                         target = target.cuda()
@@ -57,7 +58,7 @@ def build_cache_model(cfg, clip_model, train_loader_cache):
                 cache_keys.append(torch.cat(train_features, dim=0).unsqueeze(0))
             
         cache_keys = torch.cat(cache_keys, dim=0).mean(dim=0)
-        cache_keys /= cache_keys.norm(dim=-1, keepdim=True)
+        cache_keys = cache_keys / cache_keys.norm(dim=-1, keepdim=True)
         cache_keys = cache_keys.permute(1, 0)
         cache_values = F.one_hot(torch.cat(cache_values, dim=0)).half()
 
@@ -79,8 +80,9 @@ def pre_load_features(cfg, split, clip_model, loader):
         with torch.no_grad():
             for i, (images, target) in enumerate(tqdm(loader)):
                 images, target = images.cuda(), target.cuda()
-                image_features = clip_model.encode_image(images)
-                image_features /= image_features.norm(dim=-1, keepdim=True)
+                # image_features = clip_model.encode_image(images)
+                image_features, _ = clip_model.encode_image(images)
+                image_features = image_features / image_features.norm(dim=-1, keepdim=True)
                 features.append(image_features)
                 labels.append(target)
 

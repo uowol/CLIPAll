@@ -18,6 +18,20 @@ import os.path as osp
 
 from torch.cuda.amp import GradScaler, autocast
 
+CUSTOM_DATASETS = {
+    "oxford_pets": "oxford_pets", 
+    "oxford_flowers": "oxford_flowers",
+    "fgvc": "fgvc_aircraft",
+    "dtd": "dtd",
+    "eurosat": "eurosat", 
+    "stanford_cars": "stanford_cars",
+    "food101": "food101",
+    "sun397": "sun397",
+    "caltech101": "caltech101",
+    "ucf101": "ucf101",
+    "imagenet": "imagenet",
+}
+
 class MLP(nn.Module):
     """Just  an MLP"""
     def __init__(self, n_inputs, n_outputs):
@@ -158,6 +172,7 @@ class ImageEncoder(nn.Module):
 
 
 def get_clip_weights(clipall_model, textual_weights):
+    # with torch.no_grad():
     clip_weights = []
     # n_class, 12, n_prompt, 512
     for text_features_ in clipall_model.text_features:    # class 개수만큼 반복
@@ -229,29 +244,13 @@ class CLIPALL(nn.Module):
         print("="*50)
         
         self.clip_model = clip_model
-
-    def forward(self, image):
-        try:
-            x = self.image_encoder(image)
-            visual_weights, textual_weights = self.image_encoder.generate_weights(x[-1])
-            image_features = self.image_encoder.proj(x, visual_weights)
-        except:
-            x = self.image_encoder(image.float())
-            visual_weights, textual_weights = self.image_encoder.generate_weights(x[-1])
-            image_features = self.image_encoder.proj(x, visual_weights)
-
-        prompts = self.prompt_learner()
-        tokenized_prompts = self.tokenized_prompts
-        x = self.text_encoder(prompts)
-        text_features = self.text_encoder.proj(x, tokenized_prompts, textual_weights)
-
-        image_features = image_features / image_features.norm(dim=-1, keepdim=True)
-        text_features = text_features / text_features.norm(dim=-1, keepdim=True)
-
-        logit_scale = self.logit_scale.exp()
-        logits = logit_scale * image_features @ text_features.t()
-
-        return logits
+        
+    def encode_image(self, images):
+        x = self.image_encoder(images)
+        visual_weights, textual_weights = self.image_encoder.generate_weights(x[-1])
+        image_features = self.image_encoder.proj(x, visual_weights)
+        return image_features, textual_weights
+        
 
 def get_arguments():
     parser = argparse.ArgumentParser()
@@ -261,26 +260,47 @@ def get_arguments():
 
     return args
 
+def load_model(model, directory):
+    if not directory:
+        print(
+            "Note that load_model() is skipped as no pretrained "
+            "model is given (ignore this if it's done on purpose)"
+        )
+        return
+
+    map_location = None if torch.cuda.is_available() else "cpu"
+    checkpoint = torch.load(directory, map_location=map_location)
+    model.load_state_dict(checkpoint["state_dict"], strict=False)
+
+def load_pretrained_model(cfg, model):
+    if cfg['dataset'] == 'imagenet':
+        load_model(model,
+            f"/data4/kchanwo/clipall/clipall/output/imagenet/CLIPALL/mom_lr2e-3_B256_ep40_16shots/seed1/weighted_projection/model.pth.tar-40") # NOTE!!!
+    else:
+        load_model(model,
+            f"/data4/kchanwo/clipall/clipall/output/{CUSTOM_DATASETS[cfg['dataset']]}/CLIPALL/mom_lr2e-3_B32_ep100_16shots/seed1/weighted_projection/model.pth.tar-100") # NOTE!!!
+    print('='*20+"Loaded Model!")
+    return model
+
 def run_tip_adapter_F(cfg, cache_keys, cache_values, val_features, val_labels, test_features, test_labels, clip_model, clipall_model, train_loader_F):
     # Enable the cached keys to be learnable
     adapter = nn.Linear(cache_keys.shape[0], cache_keys.shape[1], bias=False).to(clip_model.dtype).cuda()
-    adapter.weight = torch.load(cfg['cache_dir'] + "/best_F_" + str(cfg['shots']) + "shots.pt") #nn.Parameter(cache_keys.t())
-    # adapter.eval()
+    adapter.weight = nn.Parameter(cache_keys.t())
     
     # params = list(adapter.parameters()) + list(clipall_model.parameters())
 
     # optimizer = torch.optim.AdamW(params, lr=cfg['lr'], eps=1e-4)
-    optimizer = torch.optim.SGD(clipall_model.parameters(), lr=2e-3, momentum=0.1)
+    optimizer = torch.optim.SGD(adapter.parameters(), lr=1e-3, momentum=0.1)
+    # optimizer = torch.optim.AdamW(adapter.parameters(), lr=cfg['lr'], eps=1e-4)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, cfg['train_epoch'] * len(train_loader_F))
-    # scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, cfg['train_epoch'] * len(train_loader_F))
     
     beta, alpha = cfg['init_beta'], cfg['init_alpha']
     best_acc, best_epoch = 0.0, 0
 
     for train_idx in range(cfg['train_epoch']):
         # Train
-        # adapter.train()
-        clipall_model.train()
+        adapter.train()
+        # clipall_model.train()
 
         correct_samples, all_samples = 0, 0
         loss_list = []
@@ -289,17 +309,13 @@ def run_tip_adapter_F(cfg, cache_keys, cache_values, val_features, val_labels, t
         for i, (images, target) in enumerate(tqdm(train_loader_F)):
             images, target = images.cuda(), target.cuda()
             
-            x = clipall_model.image_encoder(images)
-            visual_weights, textual_weights = clipall_model.image_encoder.generate_weights(x[-1])
-            image_features = clipall_model.image_encoder.proj(x, visual_weights)
-            image_features = image_features / image_features.norm(dim=-1, keepdim=True)
             # with torch.no_grad():
-            #     image_features = clipall_model.encode_image(images)
-            #     image_features /= image_features.norm(dim=-1, keepdim=True)
+            image_features, textual_weights = clipall_model.encode_image(images)
+            image_features = image_features / image_features.norm(dim=-1, keepdim=True)
 
             affinity = adapter(image_features)
             cache_logits = ((-1) * (beta - beta * affinity)).exp() @ cache_values
-            
+
             clip_weights = get_clip_weights(clipall_model, textual_weights)
 
             clip_logits = 100. * image_features @ clip_weights
@@ -321,8 +337,8 @@ def run_tip_adapter_F(cfg, cache_keys, cache_values, val_features, val_labels, t
         print('LR: {:.6f}, Acc: {:.4f} ({:}/{:}), Loss: {:.4f}'.format(current_lr, correct_samples / all_samples, correct_samples, all_samples, sum(loss_list)/len(loss_list)))
 
         # Eval
-        # adapter.eval()
-        clipall_model.eval()
+        adapter.eval()
+        # clipall_model.eval()
 
         affinity = adapter(test_features)
         cache_logits = ((-1) * (beta - beta * affinity)).exp() @ cache_values
@@ -380,10 +396,12 @@ def main():
     clip_model.eval()
     
     # CLIPALL
-    clipall_model = CLIPALL(cfg, dataset.classnames, dataset.template, clip_model)    
+    clipall_model = CLIPALL(cfg, dataset.classnames, dataset.template, clip_model)
+    load_pretrained_model(cfg, clipall_model)
+    clipall_model.eval()
     
     # NOTE: CLIPALL Added
-    cfg['load_cache'] = True
+    cfg['load_cache'] = False
 
     val_loader = build_data_loader(data_source=dataset.val, batch_size=64, is_train=False, tfm=preprocess, shuffle=False)
     test_loader = build_data_loader(data_source=dataset.test, batch_size=64, is_train=False, tfm=preprocess, shuffle=False)
@@ -398,21 +416,21 @@ def main():
     train_loader_cache = build_data_loader(data_source=dataset.train_x, batch_size=256, tfm=train_tranform, is_train=True, shuffle=False)
     train_loader_F = build_data_loader(data_source=dataset.train_x, batch_size=256, tfm=train_tranform, is_train=True, shuffle=True)
 
-    # # Textual features
+    # Textual features
     # print("\nGetting textual features as CLIP's classifier.")
     # clip_weights = clip_classifier(dataset.classnames, dataset.template, clip_model)
 
     # Construct the cache model by few-shot training set
     print("\nConstructing cache model by few-shot visual features and labels.")
-    cache_keys, cache_values = build_cache_model(cfg, clip_model, train_loader_cache)
+    cache_keys, cache_values = build_cache_model(cfg, clipall_model, train_loader_cache)
 
     # Pre-load val features
     print("\nLoading visual features and labels from val set.")
-    val_features, val_labels = pre_load_features(cfg, "val", clip_model, val_loader)
+    val_features, val_labels = pre_load_features(cfg, "val", clipall_model, val_loader)
 
     # Pre-load test features
     print("\nLoading visual features and labels from test set.")
-    test_features, test_labels = pre_load_features(cfg, "test", clip_model, test_loader)
+    test_features, test_labels = pre_load_features(cfg, "test", clipall_model, test_loader)
 
     # ------------------------------------------ Tip-Adapter-F ------------------------------------------
     run_tip_adapter_F(cfg, cache_keys, cache_values, val_features, val_labels, test_features, test_labels, clip_model, clipall_model, train_loader_F)

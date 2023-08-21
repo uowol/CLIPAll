@@ -10,7 +10,22 @@ from clip.model import convert_weights
 from .coop import load_clip_to_cpu
 from .imagenet_templates import IMAGENET_TEMPLATES, IMAGENET_TEMPLATES_SELECT
 
+import time
+import numpy as np
 import os.path as osp
+import datetime
+from collections import OrderedDict
+from tqdm import tqdm
+from torch.utils.tensorboard import SummaryWriter
+from my_dassl.data import DataManager
+from my_dassl.optim import build_optimizer, build_lr_scheduler
+from my_dassl.utils import (
+    MetricMeter, AverageMeter, tolist_if_not, count_num_param, load_checkpoint,
+    save_checkpoint, mkdir_if_missing, resume_from_checkpoint,
+    load_pretrained_weights
+)
+from my_dassl.modeling import build_head, build_backbone
+from my_dassl.evaluation import build_evaluator
 
 from torch.nn import functional as F
 from torch.cuda.amp import GradScaler, autocast
@@ -78,16 +93,25 @@ class LinearProbingCLIP(TrainerX):
         # self.optim = torch.optim.AdamW(self.model.parameters(), lr=cfg.OPTIM.LR, eps=1e-4)
         self.sched = build_lr_scheduler(self.optim, cfg.OPTIM)
 
+        self.dropout = nn.Dropout(p=0)
+
         self.register_model("clip_model", self.clip_model, self.optim, self.sched)
+        
+        n_params = sum(p.numel() for p in self.clip_model.parameters() if p.requires_grad)
+        print(f"# of Learnable Parameters: {n_params}")
 
 
     def forward_backward(self, batch):
         image, label = self.parse_batch_train(batch)
-    
+        
         image_features = self.clip_model.encode_image(image)
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
         logit_scale = self.clip_model.logit_scale.exp()
-        logits = logit_scale * image_features @ self.text_features.t()
+        
+        image_features = self.dropout(image_features)
+        text_features = self.dropout(self.text_features)
+        
+        logits = logit_scale * image_features @ text_features.t()
 
         loss = F.cross_entropy(logits, label)
         self.model_backward_and_update(loss)
@@ -115,6 +139,55 @@ class LinearProbingCLIP(TrainerX):
         logit_scale = self.clip_model.logit_scale.exp()
         logits = logit_scale * image_features @ self.text_features.t()
         return logits
+    
+    # def run_epoch(self):
+    #     self.set_model_mode("train")
+    #     losses = MetricMeter()
+    #     batch_time = AverageMeter()
+    #     data_time = AverageMeter()
+    #     self.num_batches = len(self.train_loader_x)
+
+    #     end = time.time()
+    #     for self.batch_idx, batch in enumerate(self.train_loader_x):
+    #         data_time.update(time.time() - end)
+    #         loss_summary = self.forward_backward(batch)
+    #         batch_time.update(time.time() - end)
+    #         losses.update(loss_summary)
+
+    #         meet_freq = (self.batch_idx + 1) % self.cfg.TRAIN.PRINT_FREQ == 0
+    #         only_few_batches = self.num_batches < self.cfg.TRAIN.PRINT_FREQ
+    #         if meet_freq or only_few_batches:
+    #             nb_remain = 0
+    #             nb_remain += self.num_batches - self.batch_idx - 1
+    #             nb_remain += (
+    #                 self.max_epoch - self.epoch - 1
+    #             ) * self.num_batches
+    #             eta_seconds = batch_time.avg * nb_remain
+    #             eta = str(datetime.timedelta(seconds=int(eta_seconds)))
+
+    #             info = []
+    #             info += [f"epoch [{self.epoch + 1}/{self.max_epoch}]"]
+    #             info += [f"batch [{self.batch_idx + 1}/{self.num_batches}]"]
+    #             info += [f"time {batch_time.val:.3f} ({batch_time.avg:.3f})"]
+    #             info += [f"data {data_time.val:.3f} ({data_time.avg:.3f})"]
+    #             info += [f"{losses}"]
+    #             info += [f"lr {self.get_current_lr():.4e}"]
+    #             info += [f"eta {eta}"]
+    #             print(" ".join(info))
+
+    #         n_iter = self.epoch * self.num_batches + self.batch_idx
+    #         for name, meter in losses.meters.items():
+    #             self.write_scalar("train/" + name, meter.avg, n_iter)
+    #         self.write_scalar("train/lr", self.get_current_lr(), n_iter)
+
+    #         end = time.time()
+            
+    #     print("===After run one epoch===")
+    #     print(torch.cuda.memory_allocated())
+    #     print(torch.cuda.max_memory_allocated())
+    #     print(torch.cuda.memory_reserved())
+    #     print(torch.cuda.max_memory_reserved())
+    #     exit()
         
     def load_model(self, directory, epoch=None):
         if not directory:

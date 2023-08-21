@@ -15,7 +15,7 @@ EP=$5
 CFG=mom_lr2e-3_B${BATCH}_ep${EP}
 SHOTS=16
 
-DIR=/data4/kchanwo/clipall/clipall/output/base2new/train_base/${DATASET}/shots_${SHOTS}/${TRAINER}/${CFG}/seed${SEED}
+DIR=/data4/kchanwo/clipall/clipall/temp/base2new/train_base/${DATASET}/shots_${SHOTS}/${TRAINER}/${CFG}/seed${SEED}
 if [ -d "$DIR" ]; then
     echo "Results are available in ${DIR}. Resuming..."
     CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python train.py \

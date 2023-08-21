@@ -8,6 +8,7 @@ import copy
 import numpy as np
 
 # import domainbed.captionizer as captionizer
+from domainbed import datasets
 from domainbed import networks
 from domainbed.lib.misc import random_pairs_of_minibatches
 
@@ -225,10 +226,14 @@ class CLIPALL(CLIP):
                 print(f"{name} will be updated.")
         print("="*50)
 
-        self.optimizer = torch.optim.SGD(
+        # self.optimizer = torch.optim.SGD(
+        #     self.parameters(),
+        #     lr=self.hparams["lr"],
+        #     momentum=self.hparams["momentum"]
+        # )
+        self.optimizer = torch.optim.AdamW(
             self.parameters(),
             lr=self.hparams["lr"],
-            momentum=self.hparams["momentum"]
         )
 
     def update(self, minibatches, unlabeled=None):
@@ -261,13 +266,11 @@ class CLIPALL(CLIP):
         #         f.write(f'{envs[i+1]}_image_weights:\t{iweights}\t')
         #         f.write(f'{envs[i+1]}_text_weights:\t{tweights}\n')
 
-        # NOTE: DPLCLIP
         # [12,  7, 512]
         text_features = self.encode_text(self.prompt)
         # 3 * [ 7, 512]
         text_features = [torch.einsum('da,abc->bc', weights, text_features) for weights in mean_text_weights]
         
-        # NOTE: CLIPALL
         # 3 * [12, 32, 512]
         image_features = [self.encode_image(x) for x in all_x]
         # 3 * [32, 512]
@@ -301,16 +304,9 @@ class CLIPALL(CLIP):
         mean_image_weight = image_weight.mean(dim=0, keepdim=True)
         mean_text_weight = text_weight.mean(dim=0, keepdim=True)
 
-        # NOTE: DPLCLIP
-        # [12, 7, 512]
         text_feature = self.encode_text(self.prompt)
-        # [ 7, 512]
-        # TODO: 여기 'da,abc->bc'가 아니라 'da,abc->dbc'로 하고 squeeze(0)을 해주어야 할까??
         text_feature = torch.einsum('da,abc->bc', mean_text_weight, text_feature)
         
-        # NOTE: CLIPALL
-        # [64, 512]
-        # TODO: 여기 'da,abc->bc'가 아니라 'da,abc->dbc'로 하고 squeeze(0)을 해주어야 할까??
         image_feature = torch.einsum('da,abc->bc', mean_image_weight, self.encode_image(x))
 
         image_feature = image_feature / image_feature.norm(dim=-1, keepdim=True) # [64, 512]
@@ -325,7 +321,7 @@ class CLIPALL(CLIP):
         return logits
 
 
-class DPLCLIP(CLIP):
+class DPLCLIP(CLIP):        
     def __init__(self, input_shape, num_classes, num_domains, hparams, sentence_prompt=False):
         super(DPLCLIP, self).__init__(input_shape, num_classes, num_domains, hparams)
 
@@ -426,12 +422,32 @@ class DPLCLIP(CLIP):
         return self.clip_model.logit_scale.exp() * image_feature @ text_feature.t()
 
 
-### NOTE: CLIPALL + DPLCLIP
+### NOTE: DPLCLIP + ALL
 class DPLCLIPALL(CLIP):
+    def init_model(self, input_shape, num_classes, num_domains, hparams):
+        self.dplclip = DPLCLIP(input_shape, num_classes, num_domains, hparams)
+        self.dplclip.eval()
+    
+    def load_pretrained_model(self, algorithm_path):
+        if not self.dplclip: raise "please excute init_model() to establish DPLCLIP model"
+        algorithm_dict = torch.load(algorithm_path)['model_dict']
+        algorithm_dict['network.input.weight'] = algorithm_dict.pop('network.module.input.weight')
+        algorithm_dict['network.input.bias'] = algorithm_dict.pop('network.module.input.bias')
+        algorithm_dict['network.hiddens.0.weight'] = algorithm_dict.pop('network.module.hiddens.0.weight')
+        algorithm_dict['network.hiddens.0.bias'] = algorithm_dict.pop('network.module.hiddens.0.bias')
+        algorithm_dict['network.output.weight'] = algorithm_dict.pop('network.module.output.weight')
+        algorithm_dict['network.output.bias'] = algorithm_dict.pop('network.module.output.bias')
+        if algorithm_dict is not None:
+            self.dplclip.load_state_dict(algorithm_dict)
+        else:
+            raise "algorithm_dict is None"
+
     def __init__(self, input_shape, num_classes, num_domains, hparams): 
         super(DPLCLIPALL, self).__init__(input_shape, num_classes, num_domains, hparams)
+        
+        self.init_model(input_shape, num_classes, num_domains, hparams)
+        self.load_pretrained_model(hparams['dplclip_path'])
 
-        # NOTE: CLIPALL
         visual_width = 768
         textual_width = 512
         visual_scale = visual_width ** -0.5
@@ -442,8 +458,8 @@ class DPLCLIPALL(CLIP):
         self.dtype = self.clip_model.dtype
         self.num_of_visual_encoder_layers = self.clip_model.visual.transformer.layers
         self.num_of_textual_encoder_layers = self.clip_model.transformer.layers
-        self.ln_post = self.clip_model.visual.ln_post#.requires_grad_(True)
-        self.ln_final = self.clip_model.ln_final#.requires_grad_(True)
+        self.ln_post = self.clip_model.visual.ln_post
+        self.ln_final = self.clip_model.ln_final
         self.visual_projection = nn.Parameter(  # [12, 768, 512]
             torch.stack([
                 visual_scale * torch.randn((visual_width, output_dim), dtype=self.dtype).to(self.device)
@@ -454,31 +470,10 @@ class DPLCLIPALL(CLIP):
                 textual_scale * torch.randn((textual_width, output_dim), dtype=self.dtype).to(self.device)
                 for _ in range(self.num_of_textual_encoder_layers - 1)
             ]+[self.clip_model.text_projection])).requires_grad_(True)
-            
-        
+
         classnames = [name.replace('_', ' ') for name in hparams['class_names']]
         print("LOG:",classnames)    # ['dog', 'elephant', 'giraffe', 'guitar', 'horse', 'house', 'person']
 
-        # NOTE: DPLCLIP
-        prompt_prefix = ' '.join(['X'] * hparams['num_domain_tokens'])
-        classnames = [f"a photo of a {name.replace('_', ' ')}" for name in hparams['class_names']]
-        prompts = [prompt_prefix + ' ' + name + '.' for name in classnames]
-
-        #  to get default token_prefix and token_suffix.
-        self.tokenized_prompts = torch.cat([clip.tokenize(p, truncate=True) for p in prompts]).to(self.device)
-        # tokenized_prompts[0] = tensor([49406,   343,   343,   343,   343,   343,   343,   343,   343,  1929, 269, 49407, 0, 0, ...])
-        with torch.no_grad():
-            embedding = self.clip_model.token_embedding(self.tokenized_prompts).type(self.clip_model.dtype)
-        
-        self.register_buffer('token_prefix', embedding[:, :1, :])  # SOS
-        #  torch.Size([7, 1, 512])
-        #  [-0.0001,  0.0002, -0.0046,  ...,  0.0010,  0.0025,  0.0049]
-        
-        self.register_buffer('token_suffix', embedding[:, hparams['num_domain_tokens'] + 1:, :])  # CLS, EOS
-        # torch.Size([7, 68, self.EMBEDDING_DIM]), 68 := 77 - num_domain_tokens_tokens - 2.
-        # [ 0.0013,  0.0046, -0.0115,  ...,  0.0112,  0.0147,  0.0040],...,.
-        
-        self.network = networks.MLP(self.EMBEDDING_DIM, self.EMBEDDING_DIM * hparams['num_domain_tokens'], hparams).to(device=self.device, dtype=self.clip_model.dtype)
         self.visual_network = networks.MLP(self.EMBEDDING_DIM, 12, hparams).to(device=self.device, dtype=self.clip_model.dtype)
         self.textual_network = networks.MLP(self.EMBEDDING_DIM, 12, hparams).to(device=self.device, dtype=self.clip_model.dtype)
         
@@ -489,10 +484,11 @@ class DPLCLIPALL(CLIP):
         
         self.visual_network.apply(init_weights)
         self.textual_network.apply(init_weights)
-        self.network.apply(init_weights)
 
         print("="*50)
         for name, p in self.named_parameters():
+            if 'dplclip' in name:
+                p.requires_grad_(False)
             if p.requires_grad:
                 print(f"{name} will be updated.")
         print("="*50)
@@ -537,7 +533,7 @@ class DPLCLIPALL(CLIP):
         # [7, 16, self.EMBEDDING_DIM]
         domain_feature = domain_feature.reshape(-1, self.hparams['num_domain_tokens'], self.EMBEDDING_DIM)
         # [7, 77, self.EMBEDDING_DIM]
-        domain_feature = torch.cat([self.token_prefix, domain_feature, self.token_suffix], dim=1)
+        domain_feature = torch.cat([self.dplclip.token_prefix, domain_feature, self.dplclip.token_suffix], dim=1)
 
         # NOTE: encoding
         out_list = []
@@ -554,7 +550,7 @@ class DPLCLIPALL(CLIP):
         text_features = torch.einsum('abc,acd->abd',
                             text_features[:,
                                 torch.arange(text_features.shape[1]),   # [ 7]
-                                self.tokenized_prompts.argmax(-1)            # [ 7, 77] -> [ 7]
+                                self.dplclip.tokenized_prompts.argmax(-1)            # [ 7, 77] -> [ 7]
                             ],                                          # [12,  7, self.EMBEDDING_DIM]
                             self.textual_projection)                    # [12, self.EMBEDDING_DIM, self.EMBEDDING_DIM]
         return text_features
@@ -568,7 +564,7 @@ class DPLCLIPALL(CLIP):
         # image_features :          3 * [32, self.EMBEDDING_DIM]
         image_features = [self.clip_model.encode_image(x) for x in all_x]
         # domain_features :         3 * [32, self.EMBEDDING_DIM * num_domain_tokens]
-        domain_features = [self.network(feature) for feature in image_features]
+        domain_features = [self.dplclip.network(feature) for feature in image_features]
         # mean_domain_features :    3 * [ 1, self.EMBEDDING_DIM * num_domain_tokens]
         mean_domain_features = [feature.mean(dim=0, keepdim=True) for feature in domain_features]
         # _mean_domain_features :   3 * [ 7, self.EMBEDDING_DIM * num_domain_tokens]
@@ -580,13 +576,11 @@ class DPLCLIPALL(CLIP):
         mean_image_weights = [weights.mean(dim=0, keepdim=True) for weights in image_weights]
         mean_text_weights = [weights.mean(dim=0, keepdim=True) for weights in text_weights]
         
-        # NOTE: DPLCLIP
         # [12, 21, 512]
         text_features = torch.cat([self.encode_text(feature) for feature in _mean_domain_features], dim=1)
         # 3 * [21, 512]
         text_features = [torch.einsum('da,abc->bc', weights, text_features) for weights in mean_text_weights]
 
-        # NOTE: CLIPALL
         # 3 * [12, 32, 512]
         image_features = [self.encode_image(x) for x in all_x]
         # 3 * [32, 512]
@@ -611,7 +605,7 @@ class DPLCLIPALL(CLIP):
     def predict(self, x, paths):
         # NOTE: DPLCLIP
         image_feature = self.clip_model.encode_image(x)                 # [64, 512]
-        domain_feature = self.network(image_feature)                    # [64, 16*512]
+        domain_feature = self.dplclip.network(image_feature)            # [64, 16*512]
         mean_domain_feature = torch.mean(domain_feature, dim=0,         # [ 7, 16*512] 
             keepdim=True).repeat_interleave(len(self.hparams['class_names']), dim=0)
 
@@ -620,12 +614,11 @@ class DPLCLIPALL(CLIP):
         mean_image_weight = image_weight.mean(dim=0, keepdim=True)      # [ 1, 12]
         mean_text_weight = text_weight.mean(dim=0, keepdim=True)        # [ 1, 12]
 
-        # NOTE: DPLCLIP
+        # NOTE: CLIPALL
         # [12,  7, 512]
         text_feature = self.encode_text(mean_domain_feature)
         text_feature = torch.einsum('da,abc->bc', mean_text_weight, text_feature)
 
-        # NOTE: CLIPALL
         # [12, 64, 512]
         image_feature = self.encode_image(x)
         image_feature = torch.einsum('da,abc->bc', mean_image_weight, image_feature)

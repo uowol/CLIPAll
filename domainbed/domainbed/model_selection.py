@@ -87,6 +87,10 @@ class IIDAccuracySelectionMethod(SelectionMethod):
             if i != test_env:
                 val_env_keys.append(f'env{i}_out_acc')
         test_in_acc_key = 'env{}_in_acc'.format(test_env)
+        # print({
+        #     'val_acc': np.mean([record[key] for key in val_env_keys]),
+        #     'test_acc': record[test_in_acc_key]
+        # })
         return {
             'val_acc': np.mean([record[key] for key in val_env_keys]),
             'test_acc': record[test_in_acc_key]
@@ -97,6 +101,7 @@ class IIDAccuracySelectionMethod(SelectionMethod):
         test_records = get_test_records(run_records)
         if not len(test_records):
             return None
+        # print(test_records.map(self._step_acc).argmax('val_acc'))
         return test_records.map(self._step_acc).argmax('val_acc')
 
 class LeaveOneOutSelectionMethod(SelectionMethod):
