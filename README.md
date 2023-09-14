@@ -1,4 +1,4 @@
-![image](https://github.com/uowol/CLIPAll/assets/20416616/70df07a4-2332-4574-bbb7-9a6c6bc53542)
+![image](https://github.com/uowol/CLIPAll/assets/20416616/e92cd017-3ce4-40f2-b4c3-822c3a845a84)
 
 
 ## Citation
