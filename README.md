@@ -1,3 +1,6 @@
+![image](https://github.com/uowol/CLIPAll/assets/20416616/70df07a4-2332-4574-bbb7-9a6c6bc53542)
+
+
 ## Citation
 ### Domain Prompt Learning for Efficiently Adapting CLIP to Unseen Domains
 ```
